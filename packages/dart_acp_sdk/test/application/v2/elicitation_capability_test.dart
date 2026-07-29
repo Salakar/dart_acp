@@ -12,15 +12,15 @@ void main() {
 
         _expectUnavailable(
           () => pair.agent.client.createElicitation(_formRequest()),
-          'clientCapabilities.elicitation.form',
+          'capabilities.elicitation.form',
         );
         _expectUnavailable(
           () => pair.agent.client.createElicitation(_urlRequest()),
-          'clientCapabilities.elicitation.url',
+          'capabilities.elicitation.url',
         );
         _expectUnavailable(
           () => pair.agent.client.completeElicitation(_completion()),
-          'clientCapabilities.elicitation.url',
+          'capabilities.elicitation.url',
         );
         await pair.close();
       }
@@ -42,11 +42,11 @@ void main() {
       expect(requests, 1);
       _expectUnavailable(
         () => pair.agent.client.createElicitation(_urlRequest()),
-        'clientCapabilities.elicitation.url',
+        'capabilities.elicitation.url',
       );
       _expectUnavailable(
         () => pair.agent.client.completeElicitation(_completion()),
-        'clientCapabilities.elicitation.url',
+        'capabilities.elicitation.url',
       );
       await pair.close();
     });
@@ -73,7 +73,7 @@ void main() {
       expect(completions, 1);
       _expectUnavailable(
         () => pair.agent.client.createElicitation(_formRequest()),
-        'clientCapabilities.elicitation.form',
+        'capabilities.elicitation.form',
       );
       await pair.close();
     });

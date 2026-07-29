@@ -63,7 +63,11 @@ final class AcpV2PeerCapabilities {
   factory AcpV2PeerCapabilities.empty() =>
       AcpV2PeerCapabilities(AcpJsonObject(const <String, AcpJsonValue>{}));
 
-  /// Complete peer capability object, nested beneath its protocol field name.
+  /// Wire capability fields negotiated during initialization.
+  ///
+  /// Draft ACP v2 places each peer's advertised capabilities beneath
+  /// `capabilities`. An agent's non-empty `authMethods` list is retained at
+  /// its wire name because it advertises the authentication method surface.
   final AcpJsonObject value;
 
   /// Whether a dotted capability path is present and non-null.

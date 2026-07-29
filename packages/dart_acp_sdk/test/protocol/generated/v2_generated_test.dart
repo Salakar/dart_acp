@@ -1,6 +1,8 @@
 import 'package:dart_acp_sdk/src/protocol/method.dart';
 import 'package:dart_acp_sdk/src/protocol/v2/generated/stable/method_descriptors.dart';
 import 'package:dart_acp_sdk/src/protocol/v2/generated/stable/models.dart';
+import 'package:dart_acp_sdk/src/protocol/v2/generated/unstable/method_descriptors.dart'
+    as unstable;
 import 'package:test/test.dart';
 
 void main() {
@@ -36,18 +38,44 @@ void main() {
         isA<AcpMethodDescriptorBase>().having(
           (AcpMethodDescriptorBase descriptor) => descriptor.capabilityPath,
           'capabilityPath',
-          'agentCapabilities.session',
+          'capabilities.session',
         ),
       ),
     );
-    expect(
-      sessionDeleteMethod.capabilityPath,
-      'agentCapabilities.session.delete',
-    );
+    expect(sessionDeleteMethod.capabilityPath, 'capabilities.session.delete');
     expect(sessionRequestPermissionMethod.capabilityPath, isNull);
     expect(sessionUpdateMethod.capabilityPath, isNull);
-    expect(authLoginMethod.capabilityPath, 'agentCapabilities.authMethods');
-    expect(authLogoutMethod.capabilityPath, 'agentCapabilities.authMethods');
+    expect(authLoginMethod.capabilityPath, 'authMethods');
+    expect(authLogoutMethod.capabilityPath, 'authMethods');
+    expect(elicitationCreateMethod.capabilityPath, 'capabilities.elicitation');
+    expect(
+      elicitationCompleteMethod.capabilityPath,
+      'capabilities.elicitation.url',
+    );
+  });
+
+  test('v2 unstable descriptors use v2 capability roots', () {
+    expect(
+      unstable.sessionForkMethod.capabilityPath,
+      'capabilities.session.fork',
+    );
+    expect(
+      unstable.providersListMethod.capabilityPath,
+      'capabilities.providers',
+    );
+    expect(unstable.nesStartMethod.capabilityPath, 'capabilities.nes');
+    expect(
+      unstable.documentDidOpenMethod.capabilityPath,
+      'capabilities.nes.events.document.didOpen',
+    );
+    expect(
+      unstable.mcpMessageClientToAgentRequestMethod.capabilityPath,
+      'capabilities.session.mcp.acp',
+    );
+    expect(
+      unstable.mcpMessageAgentToClientRequestMethod.capabilityPath,
+      isNull,
+    );
   });
 
   test('open tagged unions preserve extension fields safely', () {

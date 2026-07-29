@@ -119,6 +119,7 @@ final class MethodEmitter {
     final String? capability = _capabilityPath(
       fact.method,
       protocolVersion: protocolVersion,
+      side: fact.side,
     );
     final String documentation =
         fact.documentation ?? 'Schema method `${fact.method}`.';
@@ -186,12 +187,20 @@ String _kindSuffix(MethodPayloadKind kind) => switch (kind) {
   ),
 };
 
-String? _capabilityPath(String method, {required int protocolVersion}) {
+String? _capabilityPath(
+  String method, {
+  required int protocolVersion,
+  required String side,
+}) {
   if (protocolVersion == 2) {
     switch (method) {
       case 'auth/login':
       case 'auth/logout':
-        return 'agentCapabilities.authMethods';
+        return 'authMethods';
+      case 'elicitation/create':
+        return 'capabilities.elicitation';
+      case 'elicitation/complete':
+        return 'capabilities.elicitation.url';
       case 'session/new':
       case 'session/list':
       case 'session/resume':
@@ -199,23 +208,52 @@ String? _capabilityPath(String method, {required int protocolVersion}) {
       case 'session/prompt':
       case 'session/cancel':
       case 'session/set_config_option':
-        return 'agentCapabilities.session';
+        return 'capabilities.session';
       case 'session/delete':
-        return 'agentCapabilities.session.delete';
+        return 'capabilities.session.delete';
+      case 'session/fork':
+        return 'capabilities.session.fork';
+      case 'providers/list':
+      case 'providers/set':
+      case 'providers/disable':
+        return 'capabilities.providers';
+      case 'nes/start':
+      case 'nes/suggest':
+      case 'nes/accept':
+      case 'nes/reject':
+      case 'nes/close':
+        return 'capabilities.nes';
+      case 'document/didOpen':
+        return 'capabilities.nes.events.document.didOpen';
+      case 'document/didChange':
+        return 'capabilities.nes.events.document.didChange';
+      case 'document/didClose':
+        return 'capabilities.nes.events.document.didClose';
+      case 'document/didSave':
+        return 'capabilities.nes.events.document.didSave';
+      case 'document/didFocus':
+        return 'capabilities.nes.events.document.didFocus';
+      case 'mcp/message':
+        return side == 'agent' ? 'capabilities.session.mcp.acp' : null;
+      case 'mcp/connect':
+      case 'mcp/disconnect':
       case 'session/request_permission':
+      case 'session/update':
+      case r'$/cancel_request':
+        return null;
+      default:
         return null;
     }
-  } else {
-    switch (method) {
-      case 'authenticate':
-        return 'agentCapabilities.authMethods';
-      case 'logout':
-        return 'agentCapabilities.auth.logout';
-      case 'session/set_mode':
-      case 'session/set_config_option':
-      case 'session/request_permission':
-        return null;
-    }
+  }
+  switch (method) {
+    case 'authenticate':
+      return 'agentCapabilities.authMethods';
+    case 'logout':
+      return 'agentCapabilities.auth.logout';
+    case 'session/set_mode':
+    case 'session/set_config_option':
+    case 'session/request_permission':
+      return null;
   }
   const paths = <String, String>{
     'session/load': 'agentCapabilities.loadSession',

@@ -218,10 +218,9 @@ extension AcpV2AgentMethods on AcpV2AgentContext {
     CancellationToken? cancellationToken,
   }) {
     final String capabilityPath = switch (params) {
-      v2.CreateElicitationRequestForm() =>
-        'clientCapabilities.elicitation.form',
-      v2.CreateElicitationRequestUrl() => 'clientCapabilities.elicitation.url',
-      v2.CreateElicitationRequestCustom() => 'clientCapabilities.elicitation',
+      v2.CreateElicitationRequestForm() => 'capabilities.elicitation.form',
+      v2.CreateElicitationRequestUrl() => 'capabilities.elicitation.url',
+      v2.CreateElicitationRequestCustom() => 'capabilities.elicitation',
     };
     lifecycle.peerCapabilities._require(
       capabilityPath,
@@ -237,7 +236,7 @@ extension AcpV2AgentMethods on AcpV2AgentContext {
   /// Announces elicitation completion.
   Future<void> completeElicitation(v2.CompleteElicitationNotification params) {
     lifecycle.peerCapabilities._require(
-      'clientCapabilities.elicitation.url',
+      'capabilities.elicitation.url',
       v2_methods.elicitationCompleteMethod.name,
     );
     return notify(v2_methods.elicitationCompleteMethod, params);

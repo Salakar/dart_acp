@@ -44,7 +44,7 @@ authLoginMethod = AcpMethodDescriptor<LoginAuthRequest, LoginAuthResponse>(
   paramsCodec: loginAuthRequestCodec,
   resultCodec: loginAuthResponseCodec,
   resultDefinition: 'LoginAuthResponse',
-  capabilityPath: 'agentCapabilities.authMethods',
+  capabilityPath: 'authMethods',
   documentation:
       'Request parameters for the `auth/login` method.\n\nSpecifies which authentication method to use.\n\nAgents MUST support this method when their `initialize` response advertised\nat least one valid authentication method. Clients MUST NOT call this method\nwhen `authMethods` was omitted or empty.',
 );
@@ -68,7 +68,7 @@ authLogoutMethod = AcpMethodDescriptor<LogoutAuthRequest, LogoutAuthResponse>(
   paramsCodec: logoutAuthRequestCodec,
   resultCodec: logoutAuthResponseCodec,
   resultDefinition: 'LogoutAuthResponse',
-  capabilityPath: 'agentCapabilities.authMethods',
+  capabilityPath: 'authMethods',
   documentation:
       'Request parameters for the `auth/logout` method.\n\nTerminates the current authenticated session.\n\nAgents MUST support this method when their `initialize` response advertised\nat least one valid authentication method. Clients MUST NOT call this method\nwhen `authMethods` was omitted or empty.',
 );
@@ -87,7 +87,7 @@ elicitationCompleteMethod =
       paramsCodec: completeElicitationNotificationCodec,
       resultCodec: acpNoResultCodec,
       resultDefinition: null,
-      capabilityPath: 'clientCapabilities.elicitation.url',
+      capabilityPath: 'capabilities.elicitation.url',
       documentation:
           'Notification sent by the agent when a URL-based elicitation is complete.',
     );
@@ -110,7 +110,7 @@ elicitationCreateMethod =
       paramsCodec: createElicitationRequestCodec,
       resultCodec: createElicitationResponseCodec,
       resultDefinition: 'CreateElicitationResponse',
-      capabilityPath: 'clientCapabilities.elicitation',
+      capabilityPath: 'capabilities.elicitation',
       documentation:
           'Request from the agent to elicit structured user input.\n\nThe agent sends this to the client to request information from the user,\neither via a form or by directing them to a URL.\nElicitations are tied to a session (optionally a tool call) or a request.',
     );
@@ -152,7 +152,7 @@ sessionCancelMethod = AcpMethodDescriptor<CancelSessionNotification, AcpNoResult
   paramsCodec: cancelSessionNotificationCodec,
   resultCodec: acpNoResultCodec,
   resultDefinition: null,
-  capabilityPath: 'agentCapabilities.session',
+  capabilityPath: 'capabilities.session',
   documentation:
       'Notification to cancel ongoing operations for a session.\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/v2/prompt-lifecycle#cancellation)',
 );
@@ -174,7 +174,7 @@ sessionCloseMethod = AcpMethodDescriptor<CloseSessionRequest, CloseSessionRespon
   paramsCodec: closeSessionRequestCodec,
   resultCodec: closeSessionResponseCodec,
   resultDefinition: 'CloseSessionResponse',
-  capabilityPath: 'agentCapabilities.session',
+  capabilityPath: 'capabilities.session',
   documentation:
       'Request parameters for closing an active session.\n\nThe agent **must** cancel any ongoing work related to the session (treat it\nas if `session/cancel` was called) and then free up any resources associated\nwith the session.',
 );
@@ -195,7 +195,7 @@ sessionDeleteMethod =
       paramsCodec: deleteSessionRequestCodec,
       resultCodec: deleteSessionResponseCodec,
       resultDefinition: 'DeleteSessionResponse',
-      capabilityPath: 'agentCapabilities.session.delete',
+      capabilityPath: 'capabilities.session.delete',
       documentation:
           'Request parameters for deleting an existing session from `session/list`.\n\nOnly available if the Agent supports the `session.delete` capability.',
     );
@@ -214,7 +214,7 @@ sessionListMethod =
       paramsCodec: listSessionsRequestCodec,
       resultCodec: listSessionsResponseCodec,
       resultDefinition: 'ListSessionsResponse',
-      capabilityPath: 'agentCapabilities.session',
+      capabilityPath: 'capabilities.session',
       documentation: 'Request parameters for listing existing sessions.',
     );
 
@@ -233,7 +233,7 @@ sessionNewMethod = AcpMethodDescriptor<NewSessionRequest, NewSessionResponse>(
   paramsCodec: newSessionRequestCodec,
   resultCodec: newSessionResponseCodec,
   resultDefinition: 'NewSessionResponse',
-  capabilityPath: 'agentCapabilities.session',
+  capabilityPath: 'capabilities.session',
   documentation:
       'Request parameters for creating a new session.\n\nSee protocol docs: [Creating a Session](https://agentclientprotocol.com/protocol/v2/session-setup#creating-a-session)',
 );
@@ -255,7 +255,7 @@ sessionPromptMethod = AcpMethodDescriptor<PromptRequest, PromptResponse>(
   paramsCodec: promptRequestCodec,
   resultCodec: promptResponseCodec,
   resultDefinition: 'PromptResponse',
-  capabilityPath: 'agentCapabilities.session',
+  capabilityPath: 'capabilities.session',
   documentation:
       'Request parameters for sending a user prompt to the agent.\n\nContains the user\'s message and any additional context.\n\nSee protocol docs: [User Message](https://agentclientprotocol.com/protocol/v2/prompt-lifecycle#1-user-message)',
 );
@@ -300,7 +300,7 @@ sessionResumeMethod =
       paramsCodec: resumeSessionRequestCodec,
       resultCodec: resumeSessionResponseCodec,
       resultDefinition: 'ResumeSessionResponse',
-      capabilityPath: 'agentCapabilities.session',
+      capabilityPath: 'capabilities.session',
       documentation:
           'Request parameters for resuming an existing session.\n\nResumes an existing session and optionally replays prior conversation\nhistory according to `replayFrom`.',
     );
@@ -325,7 +325,7 @@ sessionSetConfigOptionMethod =
       paramsCodec: setSessionConfigOptionRequestCodec,
       resultCodec: setSessionConfigOptionResponseCodec,
       resultDefinition: 'SetSessionConfigOptionResponse',
-      capabilityPath: 'agentCapabilities.session',
+      capabilityPath: 'capabilities.session',
       documentation:
           'Request parameters for setting a session configuration option.',
     );

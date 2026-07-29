@@ -256,29 +256,19 @@ void _requireV2(v2.ProtocolVersion version) {
 AcpV2PeerCapabilities _v2ClientCapabilities(v2.InitializeRequest request) =>
     AcpV2PeerCapabilities(
       AcpJsonObject.fromObject(<String, Object?>{
-        'clientCapabilities': request.capabilities.toJson(),
+        'capabilities': request.capabilities.toJson(),
       }),
     );
 
 AcpV2PeerCapabilities _v2AgentCapabilities(v2.InitializeResponse response) {
-  final Map<String, Object?> capabilities = response.capabilities.toJson();
-  final Object? session = capabilities['session'];
-  final Map<String, Object?> logical = <String, Object?>{
-    ...capabilities,
-    if (response.authMethods case final List<v2.AuthMethod> methods
-        when methods.isNotEmpty)
-      'authMethods': <String, Object?>{},
-    if (session is Map<String, Object?>)
-      'sessionCapabilities': <String, Object?>{
-        'close': <String, Object?>{},
-        'configOptions': <String, Object?>{},
-        'list': <String, Object?>{},
-        'permissions': <String, Object?>{},
-        'resume': <String, Object?>{},
-        if (session['delete'] != null) 'delete': session['delete'],
-      },
-  };
   return AcpV2PeerCapabilities(
-    AcpJsonObject.fromObject(<String, Object?>{'agentCapabilities': logical}),
+    AcpJsonObject.fromObject(<String, Object?>{
+      'capabilities': response.capabilities.toJson(),
+      if (response.authMethods case final List<v2.AuthMethod> methods
+          when methods.isNotEmpty)
+        'authMethods': <Object?>[
+          for (final v2.AuthMethod method in methods) method.toJson(),
+        ],
+    }),
   );
 }

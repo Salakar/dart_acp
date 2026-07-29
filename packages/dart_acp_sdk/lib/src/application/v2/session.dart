@@ -671,14 +671,14 @@ void _validateV2SessionSetupCapabilities(
 }) {
   if (additionalDirectories?.isNotEmpty ?? false) {
     context.lifecycle.peerCapabilities._require(
-      'agentCapabilities.session.additionalDirectories',
+      'capabilities.session.additionalDirectories',
       method,
     );
   }
   for (final v2.McpServer server in mcpServers ?? const <v2.McpServer>[]) {
     final String? capability = switch (server) {
-      v2.McpServerStdioVariant() => 'agentCapabilities.session.mcp.stdio',
-      v2.McpServerHttpVariant() => 'agentCapabilities.session.mcp.http',
+      v2.McpServerStdioVariant() => 'capabilities.session.mcp.stdio',
+      v2.McpServerHttpVariant() => 'capabilities.session.mcp.http',
       _ => null,
     };
     context.lifecycle.peerCapabilities._require(capability, method);
@@ -691,10 +691,10 @@ void _validateV2PromptCapabilities(
 ) {
   for (final v2.ContentBlock block in blocks) {
     final String? capability = switch (block) {
-      v2.ContentBlockImage() => 'agentCapabilities.session.prompt.image',
-      v2.ContentBlockAudio() => 'agentCapabilities.session.prompt.audio',
+      v2.ContentBlockImage() => 'capabilities.session.prompt.image',
+      v2.ContentBlockAudio() => 'capabilities.session.prompt.audio',
       v2.ContentBlockResource() =>
-        'agentCapabilities.session.prompt.embeddedContext',
+        'capabilities.session.prompt.embeddedContext',
       _ => null,
     };
     context.lifecycle.peerCapabilities._require(

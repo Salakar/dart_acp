@@ -48,7 +48,7 @@ void main() {
       final advertised = asObject(
         selected!.lifecycle.peerCapabilities.value.toObject(),
       );
-      final capabilities = asObject(advertised['clientCapabilities']);
+      final capabilities = asObject(advertised['capabilities']);
       expect(capabilities, isNot(contains('fs')));
       expect(capabilities, isNot(contains('terminal')));
       expect(capabilities, isNot(contains('session')));

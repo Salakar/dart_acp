@@ -8,13 +8,11 @@
 
 ## Overview
 
-Current measured verification: 96.88% merged VM + Chrome line coverage
-(34,849/35,970 executable lines), including 99.84% generated-schema coverage
-(28,533/28,579 generated executable lines).
-
-Use `dart_acp_sdk` to build ACP clients and agents with typed protocol values,
-immutable application builders, bidirectional JSON-RPC, session workflows,
-cancellation, and bounded Dart streams.
+`dart_acp_sdk` implements the
+[Agent Client Protocol (ACP)](https://agentclientprotocol.com/) for Dart. Use
+it to build ACP clients and agents with typed protocol values, immutable
+application builders, bidirectional JSON-RPC, session workflows, cancellation,
+and bounded Dart streams.
 
 The default library contains stable ACP v1. Draft v2, unstable method overlays,
 HTTP/SSE, WebSocket, and server APIs are isolated behind explicit experimental

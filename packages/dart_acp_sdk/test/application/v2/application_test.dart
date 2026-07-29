@@ -31,6 +31,22 @@ void main() {
           pair.client.lifecycle.peerImplementation?['name']?.toObject(),
           'agent',
         );
+        expect(
+          pair.client.lifecycle.peerCapabilities.supports(
+            'capabilities.session',
+          ),
+          isTrue,
+        );
+        expect(
+          pair.client.lifecycle.peerCapabilities.supports(
+            'agentCapabilities.session',
+          ),
+          isFalse,
+        );
+        expect(
+          pair.agent.lifecycle.peerCapabilities.supports('capabilities'),
+          isTrue,
+        );
         expect(agentConnects, 1);
         expect(clientConnects, 1);
 
@@ -93,7 +109,7 @@ void main() {
                 (AcpV2CapabilityUnavailableException error) =>
                     error.capabilityPath,
                 'capabilityPath',
-                'agentCapabilities.session',
+                'capabilities.session',
               ),
         ),
       );
@@ -125,7 +141,7 @@ void main() {
           isA<AcpV2CapabilityUnavailableException>().having(
             (AcpV2CapabilityUnavailableException error) => error.capabilityPath,
             'capabilityPath',
-            'agentCapabilities.session.delete',
+            'capabilities.session.delete',
           ),
         ),
       );

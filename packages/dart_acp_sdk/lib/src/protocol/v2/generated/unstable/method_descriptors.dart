@@ -44,7 +44,7 @@ authLoginMethod = AcpMethodDescriptor<LoginAuthRequest, LoginAuthResponse>(
   paramsCodec: loginAuthRequestCodec,
   resultCodec: loginAuthResponseCodec,
   resultDefinition: 'LoginAuthResponse',
-  capabilityPath: 'agentCapabilities.authMethods',
+  capabilityPath: 'authMethods',
   documentation:
       'Request parameters for the `auth/login` method.\n\nSpecifies which authentication method to use.\n\nAgents MUST support this method when their `initialize` response advertised\nat least one valid authentication method. Clients MUST NOT call this method\nwhen `authMethods` was omitted or empty.',
 );
@@ -68,7 +68,7 @@ authLogoutMethod = AcpMethodDescriptor<LogoutAuthRequest, LogoutAuthResponse>(
   paramsCodec: logoutAuthRequestCodec,
   resultCodec: logoutAuthResponseCodec,
   resultDefinition: 'LogoutAuthResponse',
-  capabilityPath: 'agentCapabilities.authMethods',
+  capabilityPath: 'authMethods',
   documentation:
       'Request parameters for the `auth/logout` method.\n\nTerminates the current authenticated session.\n\nAgents MUST support this method when their `initialize` response advertised\nat least one valid authentication method. Clients MUST NOT call this method\nwhen `authMethods` was omitted or empty.',
 );
@@ -87,7 +87,7 @@ documentDidChangeMethod =
       paramsCodec: didChangeDocumentNotificationCodec,
       resultCodec: acpNoResultCodec,
       resultDefinition: null,
-      capabilityPath: null,
+      capabilityPath: 'capabilities.nes.events.document.didChange',
       documentation: 'Notification sent when a file is edited.',
     );
 
@@ -105,7 +105,7 @@ documentDidCloseMethod =
       paramsCodec: didCloseDocumentNotificationCodec,
       resultCodec: acpNoResultCodec,
       resultDefinition: null,
-      capabilityPath: null,
+      capabilityPath: 'capabilities.nes.events.document.didClose',
       documentation: 'Notification sent when a file is closed.',
     );
 
@@ -123,7 +123,7 @@ documentDidFocusMethod =
       paramsCodec: didFocusDocumentNotificationCodec,
       resultCodec: acpNoResultCodec,
       resultDefinition: null,
-      capabilityPath: null,
+      capabilityPath: 'capabilities.nes.events.document.didFocus',
       documentation:
           'Notification sent when a file becomes the active editor tab.',
     );
@@ -142,7 +142,7 @@ documentDidOpenMethod =
       paramsCodec: didOpenDocumentNotificationCodec,
       resultCodec: acpNoResultCodec,
       resultDefinition: null,
-      capabilityPath: null,
+      capabilityPath: 'capabilities.nes.events.document.didOpen',
       documentation: 'Notification sent when a file is opened in the editor.',
     );
 
@@ -160,7 +160,7 @@ documentDidSaveMethod =
       paramsCodec: didSaveDocumentNotificationCodec,
       resultCodec: acpNoResultCodec,
       resultDefinition: null,
-      capabilityPath: null,
+      capabilityPath: 'capabilities.nes.events.document.didSave',
       documentation: 'Notification sent when a file is saved.',
     );
 
@@ -178,7 +178,7 @@ elicitationCompleteMethod =
       paramsCodec: completeElicitationNotificationCodec,
       resultCodec: acpNoResultCodec,
       resultDefinition: null,
-      capabilityPath: 'clientCapabilities.elicitation.url',
+      capabilityPath: 'capabilities.elicitation.url',
       documentation:
           'Notification sent by the agent when a URL-based elicitation is complete.',
     );
@@ -201,7 +201,7 @@ elicitationCreateMethod =
       paramsCodec: createElicitationRequestCodec,
       resultCodec: createElicitationResponseCodec,
       resultDefinition: 'CreateElicitationResponse',
-      capabilityPath: 'clientCapabilities.elicitation',
+      capabilityPath: 'capabilities.elicitation',
       documentation:
           'Request from the agent to elicit structured user input.\n\nThe agent sends this to the client to request information from the user,\neither via a form or by directing them to a URL.\nElicitations are tied to a session (optionally a tool call) or a request.',
     );
@@ -291,7 +291,7 @@ mcpMessageClientToAgentRequestMethod =
       paramsCodec: messageMcpRequestCodec,
       resultCodec: messageMcpResponseCodec,
       resultDefinition: 'MessageMcpResponse',
-      capabilityPath: 'capabilities.mcp',
+      capabilityPath: 'capabilities.session.mcp.acp',
       documentation:
           '**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for `mcp/message`.',
     );
@@ -317,7 +317,7 @@ mcpMessageClientToAgentNotificationMethod =
       paramsCodec: messageMcpNotificationCodec,
       resultCodec: acpNoResultCodec,
       resultDefinition: null,
-      capabilityPath: 'capabilities.mcp',
+      capabilityPath: 'capabilities.session.mcp.acp',
       documentation:
           '**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nNotification parameters for `mcp/message`.\n\nThis is used when the wrapped MCP message is a notification and the outer JSON-RPC\nenvelope has no `id`.',
     );
@@ -340,7 +340,7 @@ mcpMessageAgentToClientRequestMethod =
       paramsCodec: messageMcpRequestCodec,
       resultCodec: messageMcpResponseCodec,
       resultDefinition: 'MessageMcpResponse',
-      capabilityPath: 'capabilities.mcp',
+      capabilityPath: null,
       documentation:
           '**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for `mcp/message`.',
     );
@@ -366,7 +366,7 @@ mcpMessageAgentToClientNotificationMethod =
       paramsCodec: messageMcpNotificationCodec,
       resultCodec: acpNoResultCodec,
       resultDefinition: null,
-      capabilityPath: 'capabilities.mcp',
+      capabilityPath: null,
       documentation:
           '**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nNotification parameters for `mcp/message`.\n\nThis is used when the wrapped MCP message is a notification and the outer JSON-RPC\nenvelope has no `id`.',
     );
@@ -384,7 +384,7 @@ const AcpMethodDescriptor<AcceptNesNotification, AcpNoResult> nesAcceptMethod =
       paramsCodec: acceptNesNotificationCodec,
       resultCodec: acpNoResultCodec,
       resultDefinition: null,
-      capabilityPath: null,
+      capabilityPath: 'capabilities.nes',
       documentation: 'Notification sent when a suggestion is accepted.',
     );
 
@@ -404,7 +404,7 @@ nesCloseMethod = AcpMethodDescriptor<CloseNesRequest, CloseNesResponse>(
   paramsCodec: closeNesRequestCodec,
   resultCodec: closeNesResponseCodec,
   resultDefinition: 'CloseNesResponse',
-  capabilityPath: null,
+  capabilityPath: 'capabilities.nes',
   documentation:
       'Request to close an NES session.\n\nThe agent **must** cancel any ongoing work related to the NES session\nand then free up any resources associated with the session.',
 );
@@ -422,7 +422,7 @@ const AcpMethodDescriptor<RejectNesNotification, AcpNoResult> nesRejectMethod =
       paramsCodec: rejectNesNotificationCodec,
       resultCodec: acpNoResultCodec,
       resultDefinition: null,
-      capabilityPath: null,
+      capabilityPath: 'capabilities.nes',
       documentation: 'Notification sent when a suggestion is rejected.',
     );
 
@@ -439,7 +439,7 @@ const AcpMethodDescriptor<StartNesRequest, StartNesResponse> nesStartMethod =
       paramsCodec: startNesRequestCodec,
       resultCodec: startNesResponseCodec,
       resultDefinition: 'StartNesResponse',
-      capabilityPath: null,
+      capabilityPath: 'capabilities.nes',
       documentation: 'Request to start an NES session.',
     );
 
@@ -456,7 +456,7 @@ nesSuggestMethod = AcpMethodDescriptor<SuggestNesRequest, SuggestNesResponse>(
   paramsCodec: suggestNesRequestCodec,
   resultCodec: suggestNesResponseCodec,
   resultDefinition: 'SuggestNesResponse',
-  capabilityPath: null,
+  capabilityPath: 'capabilities.nes',
   documentation: 'Request for a code suggestion.',
 );
 
@@ -478,7 +478,7 @@ providersDisableMethod =
       paramsCodec: disableProviderRequestCodec,
       resultCodec: disableProviderResponseCodec,
       resultDefinition: 'DisableProviderResponse',
-      capabilityPath: null,
+      capabilityPath: 'capabilities.providers',
       documentation:
           '**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for `providers/disable`.',
     );
@@ -501,7 +501,7 @@ providersListMethod =
       paramsCodec: listProvidersRequestCodec,
       resultCodec: listProvidersResponseCodec,
       resultDefinition: 'ListProvidersResponse',
-      capabilityPath: null,
+      capabilityPath: 'capabilities.providers',
       documentation:
           '**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for `providers/list`.',
     );
@@ -525,7 +525,7 @@ providersSetMethod = AcpMethodDescriptor<SetProviderRequest, SetProviderResponse
   paramsCodec: setProviderRequestCodec,
   resultCodec: setProviderResponseCodec,
   resultDefinition: 'SetProviderResponse',
-  capabilityPath: null,
+  capabilityPath: 'capabilities.providers',
   documentation:
       '**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for `providers/set`.\n\nReplaces the full configuration for one provider ID.',
 );
@@ -545,7 +545,7 @@ sessionCancelMethod = AcpMethodDescriptor<CancelSessionNotification, AcpNoResult
   paramsCodec: cancelSessionNotificationCodec,
   resultCodec: acpNoResultCodec,
   resultDefinition: null,
-  capabilityPath: 'agentCapabilities.session',
+  capabilityPath: 'capabilities.session',
   documentation:
       'Notification to cancel ongoing operations for a session.\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/v2/draft/prompt-lifecycle#cancellation)',
 );
@@ -567,7 +567,7 @@ sessionCloseMethod = AcpMethodDescriptor<CloseSessionRequest, CloseSessionRespon
   paramsCodec: closeSessionRequestCodec,
   resultCodec: closeSessionResponseCodec,
   resultDefinition: 'CloseSessionResponse',
-  capabilityPath: 'agentCapabilities.session',
+  capabilityPath: 'capabilities.session',
   documentation:
       'Request parameters for closing an active session.\n\nThe agent **must** cancel any ongoing work related to the session (treat it\nas if `session/cancel` was called) and then free up any resources associated\nwith the session.',
 );
@@ -588,7 +588,7 @@ sessionDeleteMethod =
       paramsCodec: deleteSessionRequestCodec,
       resultCodec: deleteSessionResponseCodec,
       resultDefinition: 'DeleteSessionResponse',
-      capabilityPath: 'agentCapabilities.session.delete',
+      capabilityPath: 'capabilities.session.delete',
       documentation:
           'Request parameters for deleting an existing session from `session/list`.\n\nOnly available if the Agent supports the `session.delete` capability.',
     );
@@ -615,7 +615,7 @@ sessionForkMethod = AcpMethodDescriptor<ForkSessionRequest, ForkSessionResponse>
   paramsCodec: forkSessionRequestCodec,
   resultCodec: forkSessionResponseCodec,
   resultDefinition: 'ForkSessionResponse',
-  capabilityPath: 'agentCapabilities.sessionCapabilities.fork',
+  capabilityPath: 'capabilities.session.fork',
   documentation:
       '**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for forking an existing session.\n\nCreates a new session based on the context of an existing one, allowing\noperations like generating summaries without affecting the original session\'s history.\n\nOnly available if the Agent supports the `session.fork` capability.',
 );
@@ -634,7 +634,7 @@ sessionListMethod =
       paramsCodec: listSessionsRequestCodec,
       resultCodec: listSessionsResponseCodec,
       resultDefinition: 'ListSessionsResponse',
-      capabilityPath: 'agentCapabilities.session',
+      capabilityPath: 'capabilities.session',
       documentation: 'Request parameters for listing existing sessions.',
     );
 
@@ -653,7 +653,7 @@ sessionNewMethod = AcpMethodDescriptor<NewSessionRequest, NewSessionResponse>(
   paramsCodec: newSessionRequestCodec,
   resultCodec: newSessionResponseCodec,
   resultDefinition: 'NewSessionResponse',
-  capabilityPath: 'agentCapabilities.session',
+  capabilityPath: 'capabilities.session',
   documentation:
       'Request parameters for creating a new session.\n\nSee protocol docs: [Creating a Session](https://agentclientprotocol.com/protocol/v2/draft/session-setup#creating-a-session)',
 );
@@ -675,7 +675,7 @@ sessionPromptMethod = AcpMethodDescriptor<PromptRequest, PromptResponse>(
   paramsCodec: promptRequestCodec,
   resultCodec: promptResponseCodec,
   resultDefinition: 'PromptResponse',
-  capabilityPath: 'agentCapabilities.session',
+  capabilityPath: 'capabilities.session',
   documentation:
       'Request parameters for sending a user prompt to the agent.\n\nContains the user\'s message and any additional context.\n\nSee protocol docs: [User Message](https://agentclientprotocol.com/protocol/v2/draft/prompt-lifecycle#1-user-message)',
 );
@@ -720,7 +720,7 @@ sessionResumeMethod =
       paramsCodec: resumeSessionRequestCodec,
       resultCodec: resumeSessionResponseCodec,
       resultDefinition: 'ResumeSessionResponse',
-      capabilityPath: 'agentCapabilities.session',
+      capabilityPath: 'capabilities.session',
       documentation:
           'Request parameters for resuming an existing session.\n\nResumes an existing session and optionally replays prior conversation\nhistory according to `replayFrom`.',
     );
@@ -745,7 +745,7 @@ sessionSetConfigOptionMethod =
       paramsCodec: setSessionConfigOptionRequestCodec,
       resultCodec: setSessionConfigOptionResponseCodec,
       resultDefinition: 'SetSessionConfigOptionResponse',
-      capabilityPath: 'agentCapabilities.session',
+      capabilityPath: 'capabilities.session',
       documentation:
           'Request parameters for setting a session configuration option.',
     );

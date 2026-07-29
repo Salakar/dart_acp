@@ -8,12 +8,10 @@
 
 ## Overview
 
-Current measured verification: 96.88% merged VM + Chrome line coverage
-(34,849/35,970 executable lines), including 99.84% generated-schema coverage
-(28,533/28,579 generated executable lines).
-
-`dart_acp_sdk` lets Dart applications act as ACP clients, agents, or remote
-protocol hosts. It combines schema-generated protocol values with typed
+`dart_acp_sdk` is a Dart implementation of the
+[Agent Client Protocol (ACP)](https://agentclientprotocol.com/). It lets Dart
+applications act as ACP clients, agents, or remote protocol hosts. It combines
+schema-generated protocol values with typed
 application builders, correlated JSON-RPC, session workflows, cancellation,
 bounded transports, and browser-safe conditional libraries.
 

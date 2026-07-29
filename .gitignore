@@ -9,4 +9,5 @@ phases/
 specs/
 sources/
 .DS_Store
-
+# Dartify workspace
+doc/api/

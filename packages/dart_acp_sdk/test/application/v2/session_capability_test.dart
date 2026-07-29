@@ -102,10 +102,7 @@ void main() {
             )
             .start(),
         throwsA(
-          _missing(
-            'session/new',
-            'agentCapabilities.session.additionalDirectories',
-          ),
+          _missing('session/new', 'capabilities.session.additionalDirectories'),
         ),
       );
       await expectLater(
@@ -115,7 +112,7 @@ void main() {
               mcpServers: <McpServer>[_stdioServer()],
             )
             .start(),
-        throwsA(_missing('session/new', 'agentCapabilities.session.mcp.stdio')),
+        throwsA(_missing('session/new', 'capabilities.session.mcp.stdio')),
       );
       await expectLater(
         sessions
@@ -124,7 +121,7 @@ void main() {
               mcpServers: <McpServer>[_httpServer()],
             )
             .start(),
-        throwsA(_missing('session/new', 'agentCapabilities.session.mcp.http')),
+        throwsA(_missing('session/new', 'capabilities.session.mcp.http')),
       );
 
       expect(calls, 0);
@@ -150,21 +147,17 @@ void main() {
         throwsA(
           _missing(
             'session/resume',
-            'agentCapabilities.session.additionalDirectories',
+            'capabilities.session.additionalDirectories',
           ),
         ),
       );
       await expectLater(
         sessions.resume(_resume(mcpServers: <McpServer>[_stdioServer()])),
-        throwsA(
-          _missing('session/resume', 'agentCapabilities.session.mcp.stdio'),
-        ),
+        throwsA(_missing('session/resume', 'capabilities.session.mcp.stdio')),
       );
       await expectLater(
         sessions.resume(_resume(mcpServers: <McpServer>[_httpServer()])),
-        throwsA(
-          _missing('session/resume', 'agentCapabilities.session.mcp.http'),
-        ),
+        throwsA(_missing('session/resume', 'capabilities.session.mcp.http')),
       );
 
       expect(calls, 0);
@@ -222,12 +215,9 @@ void main() {
           .newSession(cwd: AbsolutePath('/workspace'))
           .start();
       final cases = <(ContentBlock, String)>[
-        (_image(), 'agentCapabilities.session.prompt.image'),
-        (_audio(), 'agentCapabilities.session.prompt.audio'),
-        (
-          _embeddedResource(),
-          'agentCapabilities.session.prompt.embeddedContext',
-        ),
+        (_image(), 'capabilities.session.prompt.image'),
+        (_audio(), 'capabilities.session.prompt.audio'),
+        (_embeddedResource(), 'capabilities.session.prompt.embeddedContext'),
       ];
 
       for (final (block, path) in cases) {
