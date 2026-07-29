@@ -1,0 +1,131 @@
+# Agent Client Protocol
+
+> The Agent Client Protocol (ACP) is a protocol that standardizes communication between code editors.
+
+## Docs
+
+- [ACP Registry is stabilized](https://agentclientprotocol.com/announcements/acp-agent-registry-stabilized.md): Announcement that the ACP Registry RFD has been completed and the registry is stabilized.
+- [ACP v2 is available in Draft](https://agentclientprotocol.com/announcements/acp-v2-draft.md): The ACP v2 protocol documentation and schema are published in draft form for review and testing.
+- [Additional Workspace Roots are stabilized](https://agentclientprotocol.com/announcements/additional-directories-stabilized.md): Announcement that additional workspace roots are now part of the stable ACP protocol.
+- [Boolean Config Options are stabilized](https://agentclientprotocol.com/announcements/boolean-config-option-stabilized.md): Announcement that boolean session configuration options are now part of the stable ACP protocol.
+- [Elicitation is stabilized](https://agentclientprotocol.com/announcements/elicitation-stabilized.md): Announcement that structured elicitation is now part of the stable ACP protocol.
+- [Implementation information for agents and clients](https://agentclientprotocol.com/announcements/implementation-information.md): Protocol update introducing optional implementation metadata during initialization.
+- [Logout Method is stabilized](https://agentclientprotocol.com/announcements/logout-method-stabilized.md): Announcement that the logout method is now part of the stable ACP protocol.
+- [Message IDs are stabilized](https://agentclientprotocol.com/announcements/message-id-stabilized.md): Announcement that optional Agent-generated message IDs are now part of the stable ACP v1 protocol.
+- [Model Config Category is stabilized](https://agentclientprotocol.com/announcements/model-config-category-stabilized.md): Announcement that the model_config session configuration category is now part of the stable ACP protocol.
+- [Request Cancellation is stabilized](https://agentclientprotocol.com/announcements/request-cancellation-stabilized.md): Announcement that protocol-level request cancellation is now part of the stable ACP protocol.
+- [Rust and TypeScript SDKs reach 1.0](https://agentclientprotocol.com/announcements/sdk-1-0-releases.md): Announcement that the Rust and TypeScript ACP SDKs have reached version 1.0.0.
+- [Sergey Ignatov joins ACP as Lead Maintainer](https://agentclientprotocol.com/announcements/sergey-ignatov-lead-maintainer.md): Governance announcement about Sergey Ignatov joining ACP as a Lead Maintainer.
+- [Session Close is stabilized](https://agentclientprotocol.com/announcements/session-close-stabilized.md): Announcement that the session/close method is now part of the stable ACP protocol.
+- [Session Config Options are stabilized](https://agentclientprotocol.com/announcements/session-config-options-stabilized.md): Announcement that session-level configuration selectors are now part of the stable ACP protocol.
+- [Session Delete is stabilized](https://agentclientprotocol.com/announcements/session-delete-stabilized.md): Announcement that the session/delete method is now part of the stable ACP protocol.
+- [Session Info Update is stabilized](https://agentclientprotocol.com/announcements/session-info-update-stabilized.md): Announcement that the session_info_update notification is now part of the stable ACP protocol.
+- [Session List is stabilized](https://agentclientprotocol.com/announcements/session-list-stabilized.md): Announcement that the session/list method is now part of the stable ACP protocol.
+- [Session Resume is stabilized](https://agentclientprotocol.com/announcements/session-resume-stabilized.md): Announcement that the session/resume method is now part of the stable ACP protocol.
+- [Session Usage Updates are stabilized](https://agentclientprotocol.com/announcements/session-usage-stabilized.md): Announcement that session context and cumulative cost updates are now part of the stable ACP protocol.
+- [Transports Working Group](https://agentclientprotocol.com/announcements/transports-working-group.md): Announcing the new Transports Working Group, to stabilize new transport formats.
+- [Brand](https://agentclientprotocol.com/brand.md): Assets for the Agent Client Protocol brand.
+- [Code of Conduct](https://agentclientprotocol.com/community/code-of-conduct.md)
+- [Contributor Communication](https://agentclientprotocol.com/community/communication.md): Communication methods for Agent Client Protocol contributors
+- [Contributing](https://agentclientprotocol.com/community/contributing.md): How to participate in the development of ACP
+- [Governance](https://agentclientprotocol.com/community/governance.md): How the ACP project is governed
+- [Working and Interest Groups](https://agentclientprotocol.com/community/working-interest-groups.md): Learn about the two forms of collaborative groups within the Agent Client Protocol's governance structure - Working Groups and Interest Groups.
+- [Agents](https://agentclientprotocol.com/get-started/agents.md): Agents implementing the Agent Client Protocol.
+- [Architecture](https://agentclientprotocol.com/get-started/architecture.md): Overview of the Agent Client Protocol architecture.
+- [Clients](https://agentclientprotocol.com/get-started/clients.md): Clients, frameworks, connectors, and related tools around the Agent Client Protocol.
+- [Introduction](https://agentclientprotocol.com/get-started/introduction.md): Get started with the Agent Client Protocol.
+- [ACP Registry](https://agentclientprotocol.com/get-started/registry.md): The easiest way to find and install ACP-compatible agents.
+- [Community](https://agentclientprotocol.com/libraries/community.md): Community managed libraries for the Agent Client Protocol
+- [Java](https://agentclientprotocol.com/libraries/java.md): Java library for the Agent Client Protocol
+- [Kotlin](https://agentclientprotocol.com/libraries/kotlin.md): Kotlin library for the Agent Client Protocol
+- [Python](https://agentclientprotocol.com/libraries/python.md): Python library for the Agent Client Protocol
+- [Rust](https://agentclientprotocol.com/libraries/rust.md): Rust library for the Agent Client Protocol
+- [TypeScript](https://agentclientprotocol.com/libraries/typescript.md): TypeScript library for the Agent Client Protocol
+- [Agent Plan](https://agentclientprotocol.com/protocol/v1/agent-plan.md): How Agents communicate their execution plans
+- [Authentication](https://agentclientprotocol.com/protocol/v1/authentication.md): Authenticating with agents and logging out
+- [Cancellation](https://agentclientprotocol.com/protocol/v1/cancellation.md): Mechanisms for request cancellation
+- [Content](https://agentclientprotocol.com/protocol/v1/content.md): Understanding content blocks in the Agent Client Protocol
+- [Elicitation](https://agentclientprotocol.com/protocol/v1/elicitation.md): Requesting structured information from users
+- [Extensibility](https://agentclientprotocol.com/protocol/v1/extensibility.md): Adding custom data and capabilities
+- [File System](https://agentclientprotocol.com/protocol/v1/file-system.md): Client filesystem access methods
+- [Initialization](https://agentclientprotocol.com/protocol/v1/initialization.md): How all Agent Client Protocol connections begin
+- [Overview](https://agentclientprotocol.com/protocol/v1/overview.md): How the Agent Client Protocol works
+- [Prompt Turn](https://agentclientprotocol.com/protocol/v1/prompt-turn.md): Understanding the core conversation flow
+- [Schema](https://agentclientprotocol.com/protocol/v1/schema.md): Schema definitions for the Agent Client Protocol
+- [Session Config Options](https://agentclientprotocol.com/protocol/v1/session-config-options.md): Flexible configuration selectors for agent sessions
+- [Session Delete](https://agentclientprotocol.com/protocol/v1/session-delete.md): Removing sessions from session history
+- [Session List](https://agentclientprotocol.com/protocol/v1/session-list.md): Discovering existing sessions
+- [Session Modes](https://agentclientprotocol.com/protocol/v1/session-modes.md): Switch between different agent operating modes
+- [Session Setup](https://agentclientprotocol.com/protocol/v1/session-setup.md): Creating and loading sessions
+- [Slash Commands](https://agentclientprotocol.com/protocol/v1/slash-commands.md): Advertise available slash commands to clients
+- [Terminals](https://agentclientprotocol.com/protocol/v1/terminals.md): Executing and managing terminal commands
+- [Tool Calls](https://agentclientprotocol.com/protocol/v1/tool-calls.md): How Agents report tool call execution
+- [Transports](https://agentclientprotocol.com/protocol/v1/transports.md): Mechanisms for agents and clients to communicate with each other
+- [Agent Plan](https://agentclientprotocol.com/protocol/v2/agent-plan.md): How Agents communicate their execution plans
+- [Authentication](https://agentclientprotocol.com/protocol/v2/authentication.md): Authenticating with agents and logging out
+- [Cancellation](https://agentclientprotocol.com/protocol/v2/cancellation.md): Mechanisms for request cancellation
+- [Content](https://agentclientprotocol.com/protocol/v2/content.md): Understanding content blocks in the Agent Client Protocol
+- [Elicitation](https://agentclientprotocol.com/protocol/v2/elicitation.md): Requesting structured information from users
+- [Extensibility](https://agentclientprotocol.com/protocol/v2/extensibility.md): Adding custom data and capabilities
+- [Initialization](https://agentclientprotocol.com/protocol/v2/initialization.md): How all Agent Client Protocol connections begin
+- [Migrating from v1](https://agentclientprotocol.com/protocol/v2/migration.md): A complete guide to ACP v2 for implementers familiar with v1: breaking changes, new features, and step-by-step migration
+- [Overview](https://agentclientprotocol.com/protocol/v2/overview.md): How the Agent Client Protocol works
+- [Prompt Lifecycle](https://agentclientprotocol.com/protocol/v2/prompt-lifecycle.md): How prompts, state updates, and completion fit together
+- [Schema](https://agentclientprotocol.com/protocol/v2/schema.md): Schema definitions for the Agent Client Protocol
+- [Session Config Options](https://agentclientprotocol.com/protocol/v2/session-config-options.md): Flexible configuration selectors for agent sessions
+- [Session Delete](https://agentclientprotocol.com/protocol/v2/session-delete.md): Removing sessions from session history
+- [Session List](https://agentclientprotocol.com/protocol/v2/session-list.md): Discovering existing sessions
+- [Session Setup](https://agentclientprotocol.com/protocol/v2/session-setup.md): Creating and resuming sessions
+- [Slash Commands](https://agentclientprotocol.com/protocol/v2/slash-commands.md): Advertise available slash commands to clients
+- [Tool Calls](https://agentclientprotocol.com/protocol/v2/tool-calls.md): How Agents report tool call execution
+- [Transports](https://agentclientprotocol.com/protocol/v2/transports.md): Mechanisms for agents and clients to communicate with each other
+- [Publications](https://agentclientprotocol.com/publications.md): ACP publications, talks, presentations, and videos
+- [Requests for Dialog (RFDs)](https://agentclientprotocol.com/rfds/about.md): Our process for introducing changes to the protocol
+- [ACP Agent Registry](https://agentclientprotocol.com/rfds/acp-agent-registry.md)
+- [Additional Workspace Roots for Session Lifecycle Requests](https://agentclientprotocol.com/rfds/additional-directories.md)
+- [Terminal Authentication](https://agentclientprotocol.com/rfds/auth-methods.md)
+- [Boolean Config Option Type](https://agentclientprotocol.com/rfds/boolean-config-option.md)
+- [Configurable LLM Providers](https://agentclientprotocol.com/rfds/custom-llm-endpoint.md)
+- [Represent deleted files in diff](https://agentclientprotocol.com/rfds/diff-delete.md)
+- [Elicitation: Structured User Input](https://agentclientprotocol.com/rfds/elicitation.md)
+- [End-Turn Token Usage](https://agentclientprotocol.com/rfds/end-turn-token-usage.md)
+- [Agent Authentication State Query](https://agentclientprotocol.com/rfds/get-auth-state.md)
+- [Introduce RFD Process](https://agentclientprotocol.com/rfds/introduce-rfd-process.md)
+- [Logout Method](https://agentclientprotocol.com/rfds/logout-method.md)
+- [MCP-over-ACP: MCP Transport via ACP Channels](https://agentclientprotocol.com/rfds/mcp-over-acp.md)
+- [Message ID](https://agentclientprotocol.com/rfds/message-id.md)
+- [Meta Field Propagation Conventions](https://agentclientprotocol.com/rfds/meta-propagation.md)
+- [Model Config Option Category](https://agentclientprotocol.com/rfds/model-config-category.md)
+- [Next Edit Suggestions](https://agentclientprotocol.com/rfds/next-edit-suggestions.md)
+- [Plan Operations Support](https://agentclientprotocol.com/rfds/plan-operations.md)
+- [Agent Extensions via ACP Proxies](https://agentclientprotocol.com/rfds/proxy-chains.md)
+- [Request Cancellation Mechanism](https://agentclientprotocol.com/rfds/request-cancellation.md)
+- [Rust SDK based on SACP](https://agentclientprotocol.com/rfds/rust-sdk-v1.md)
+- [Closing active sessions](https://agentclientprotocol.com/rfds/session-close.md)
+- [Session Config Options](https://agentclientprotocol.com/rfds/session-config-options.md)
+- [Session Delete](https://agentclientprotocol.com/rfds/session-delete.md)
+- [Forking of existing sessions](https://agentclientprotocol.com/rfds/session-fork.md)
+- [Session Info Update](https://agentclientprotocol.com/rfds/session-info-update.md)
+- [Session List](https://agentclientprotocol.com/rfds/session-list.md)
+- [Resuming of existing sessions](https://agentclientprotocol.com/rfds/session-resume.md)
+- [Session Context Size and Cost](https://agentclientprotocol.com/rfds/session-usage.md)
+- [Streamable HTTP & WebSocket Transport](https://agentclientprotocol.com/rfds/streamable-http-websocket-transport.md)
+- [Tool Call Name](https://agentclientprotocol.com/rfds/tool-call-name.md)
+- [RFD Updates](https://agentclientprotocol.com/rfds/updates.md): Lifecycle updates for ACP Requests for Dialog
+- [v2 Client Filesystem and Terminal Execution Surface](https://agentclientprotocol.com/rfds/v2/client-filesystem-terminal-capabilities.md)
+- [v2 Diff File States](https://agentclientprotocol.com/rfds/v2/diff-file-states.md)
+- [v2 Enum Variant Extension](https://agentclientprotocol.com/rfds/v2/enum-variant-extension.md)
+- [v2 Message Updates and Chunks](https://agentclientprotocol.com/rfds/v2/message-updates.md)
+- [ACP v2 Proposal](https://agentclientprotocol.com/rfds/v2/overview.md)
+- [v2 Permission Requests](https://agentclientprotocol.com/rfds/v2/permission-requests.md)
+- [v2 Plan Variants](https://agentclientprotocol.com/rfds/v2/plan-variants.md)
+- [v2 Prompt Lifecycle](https://agentclientprotocol.com/rfds/v2/prompt.md)
+- [v2 Required Session Methods](https://agentclientprotocol.com/rfds/v2/required-session-methods.md)
+- [v2 Session Resume Replay](https://agentclientprotocol.com/rfds/v2/session-resume-replay.md)
+- [v2 Terminal Output](https://agentclientprotocol.com/rfds/v2/terminal-output.md)
+- [v2 Tool Call Updates](https://agentclientprotocol.com/rfds/v2/tool-call-updates.md)
+- [Updates](https://agentclientprotocol.com/updates.md): Updates and announcements about the Agent Client Protocol
+
+## OpenAPI Specs
+
+- [openapi](https://agentclientprotocol.com/api-reference/openapi.json)

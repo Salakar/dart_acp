@@ -1,0 +1,61 @@
+{
+  "measuredAt": "2026-07-29",
+  "environment": {
+    "architecture": "arm64",
+    "dart": "3.12.2",
+    "operatingSystem": "macOS 15.0.1",
+    "processors": 16
+  },
+  "benchmarkHarness": {
+    "unit": "microseconds",
+    "results": {
+      "application.prompt_turn.sessions_1": 15.626,
+      "application.prompt_turn.sessions_100": 14.594,
+      "generated.plan_and_open_union_round_trip": 520.688,
+      "json_rpc.batch_100_decode": 194.847,
+      "json_rpc.batch_dispatch.50_requests_50_notifications": 142.378,
+      "json_rpc.pending_dispatch.1": 2.194,
+      "json_rpc.pending_dispatch.100": 160.039,
+      "json_rpc.pending_dispatch.1000": 1617.534,
+      "ndjson.1024_bytes.chunks_1": 4.075,
+      "ndjson.1024_bytes.chunks_64": 8.714,
+      "ndjson.1024_bytes.chunks_1024": 83.331,
+      "ndjson.1048576_bytes.chunks_1": 2777.767,
+      "ndjson.1048576_bytes.chunks_64": 2916.016,
+      "ndjson.1048576_bytes.chunks_1024": 2880.753,
+      "ndjson.10485760_bytes.chunks_1024": 25574.57,
+      "routing.fan_out.capacity_1024": 176.987,
+      "routing.lookup.sessions_1": 336.065,
+      "routing.lookup.sessions_100": 393.394,
+      "routing.lookup.sessions_10000": 553.139,
+      "routing.registry_close.connections_100": 196.799,
+      "sse.100_multiline_events": 164.043
+    }
+  },
+  "endToEnd": {
+    "iterations": 20,
+    "unit": "microseconds",
+    "results": [
+      {
+        "name": "in_process",
+        "p50": 1895,
+        "p95": 2835
+      },
+      {
+        "name": "stdio",
+        "p50": 568016,
+        "p95": 600019
+      },
+      {
+        "name": "http_sse",
+        "p50": 5128,
+        "p95": 8164
+      },
+      {
+        "name": "web_socket",
+        "p50": 2809,
+        "p95": 3550
+      }
+    ]
+  }
+}

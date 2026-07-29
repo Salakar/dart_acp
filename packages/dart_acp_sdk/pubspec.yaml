@@ -1,0 +1,27 @@
+name: dart_acp_sdk
+description: A strongly typed Dart SDK for the Agent Client Protocol.
+version: 0.1.0
+repository: https://github.com/salakar/dart_acp_sdk
+issue_tracker: https://github.com/salakar/dart_acp_sdk/issues
+homepage: https://github.com/salakar/dart_acp_sdk
+topics:
+  - ai
+  - agents
+  - json-rpc
+  - protocol
+screenshots:
+  - description: The dart_acp_sdk package logo.
+    path: assets/logo.png
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  json_annotation: ^4.12.0
+
+dev_dependencies:
+  benchmark_harness: ^2.4.0
+  build_runner: ^2.15.3
+  json_serializable: ^6.14.0
+  lints: ^6.1.0
+  test: ^1.31.2

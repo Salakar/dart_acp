@@ -1,0 +1,256 @@
+{
+  "formatVersion": 1,
+  "authority": {
+    "behavior": "The live versioned protocol pages observed on 2026-07-29 define current behavioral and security requirements.",
+    "wireShape": "The pinned official schema and meta files at commit 67ab340154fdfab4759a8046d31e82387ddc079a define generated Dart wire shape.",
+    "conflictPolicy": "For wire-shape conflicts the pinned official schema wins; for behavioral and security requirements the live versioned prose wins. RFDs, announcements, and ecosystem pages never override either source."
+  },
+  "schemaPin": {
+    "officialRepository": "https://github.com/agentclientprotocol/agent-client-protocol",
+    "officialCommit": "67ab340154fdfab4759a8046d31e82387ddc079a",
+    "sdkRepository": "https://github.com/agentclientprotocol/typescript-sdk",
+    "sdkCommit": "f1c01412e2c3e081f13f343b9e6586c5a4759b8f",
+    "manifest": "tool/schema/schema_manifest.json",
+    "conformanceReport": "tool/schema/conformance_report.json",
+    "lanes": {
+      "v1Stable": {
+        "definitions": 168,
+        "declarations": 569,
+        "codecCases": 857,
+        "methods": 25
+      },
+      "v1Unstable": {
+        "definitions": 260,
+        "declarations": 856,
+        "codecCases": 1352,
+        "methods": 45
+      },
+      "v2Stable": {
+        "definitions": 172,
+        "declarations": 610,
+        "codecCases": 873,
+        "methods": 16
+      },
+      "v2Unstable": {
+        "definitions": 261,
+        "declarations": 887,
+        "codecCases": 1356,
+        "methods": 36
+      }
+    }
+  },
+  "rationales": {
+    "runtime-enforced": "The SDK owns this protocol invariant, implements it in the referenced runtime layer, and exercises it through the referenced test IDs.",
+    "typed-contract": "The SDK owns typed wire encoding, decoding, method correlation, and capability representation; the application decides when and why to emit the represented operation.",
+    "caller-policy": "This is a user-interface, credential-handling, authorization, model, or agent-policy duty. The SDK exposes the exact typed contract but must not silently choose policy for its caller.",
+    "schema-delegated": "Every definition and method in both baseline and unstable lanes is traced by the generated conformance report; the offline verifier rejects any declaration or method without concrete generated test cases.",
+    "versioned-spec-wins": "This page describes a version delta. v1 and v2 remain physically isolated, the negotiated lane selects behavior, and the pinned official schema wins for exact wire shape."
+  },
+  "implementationAnchors": {
+    "wire.v1": {
+      "paths": [
+        "lib/src/protocol/v1/generated/stable/protocol.dart",
+        "lib/src/protocol/v1/generated/stable/models.dart",
+        "lib/src/protocol/v1/generated/stable/method_descriptors.dart",
+        "lib/src/protocol/v1/generated/unstable/protocol.dart",
+        "lib/src/protocol/v1/generated/unstable/models.dart",
+        "lib/src/protocol/v1/generated/unstable/method_descriptors.dart"
+      ]
+    },
+    "wire.v2": {
+      "paths": [
+        "lib/src/protocol/v2/generated/stable/protocol.dart",
+        "lib/src/protocol/v2/generated/stable/models.dart",
+        "lib/src/protocol/v2/generated/stable/method_descriptors.dart",
+        "lib/src/protocol/v2/generated/unstable/protocol.dart",
+        "lib/src/protocol/v2/generated/unstable/models.dart",
+        "lib/src/protocol/v2/generated/unstable/method_descriptors.dart"
+      ]
+    },
+    "wire.common": {
+      "paths": [
+        "lib/src/common/json_value.dart",
+        "lib/src/common/patch.dart",
+        "lib/src/common/value_types.dart",
+        "lib/src/protocol/method.dart",
+        "lib/src/protocol/resilient_decoder.dart"
+      ]
+    },
+    "application.v1": {
+      "paths": [
+        "lib/src/application/v1.dart",
+        "lib/src/application/application.dart",
+        "lib/src/application/connection.dart",
+        "lib/src/application/session.dart",
+        "lib/src/application/session_runtime.dart",
+        "lib/src/application/capabilities.dart"
+      ]
+    },
+    "application.v2": {
+      "paths": [
+        "lib/src/application/v2/application.dart",
+        "lib/src/application/v2/connection.dart",
+        "lib/src/application/v2/session.dart",
+        "lib/src/application/v2/session_runtime.dart",
+        "lib/src/application/v2/methods.dart",
+        "lib/src/application/v2/batch.dart"
+      ]
+    },
+    "jsonrpc": {
+      "paths": [
+        "lib/src/json_rpc/codec.dart",
+        "lib/src/json_rpc/message.dart",
+        "lib/src/json_rpc/connection.dart",
+        "lib/src/json_rpc/connection_receive.dart",
+        "lib/src/json_rpc/cancellation.dart",
+        "lib/src/json_rpc/batch.dart"
+      ]
+    },
+    "transport.stdio": {
+      "paths": [
+        "lib/src/transport/ndjson_stream.dart",
+        "lib/src/transport/line_buffer.dart",
+        "lib/src/transport/stdio.dart",
+        "lib/src/transport/stdio_io.dart",
+        "lib/src/transport/stdio_stub.dart"
+      ]
+    },
+    "transport.remote": {
+      "paths": [
+        "lib/src/remote/http_client.dart",
+        "lib/src/remote/http_server.dart",
+        "lib/src/remote/server_connection.dart",
+        "lib/src/remote/web_socket_client.dart",
+        "lib/src/remote/web_socket_server.dart",
+        "lib/src/remote/sse.dart"
+      ]
+    },
+    "schema.evidence": {
+      "paths": [
+        "tool/schema/schema_manifest.json",
+        "tool/schema/conformance_report.json",
+        "tool/schema/drift_report.json",
+        "test/protocol/generated/generated_conformance_test.dart",
+        "test/schema/conformance_report_test.dart"
+      ]
+    }
+  },
+  "testAnchors": {
+    "schema.pin": {
+      "path": "test/schema/schema_pipeline_test.dart",
+      "needle": "manifest pins and verifies every source snapshot"
+    },
+    "schema.report": {
+      "path": "test/schema/conformance_report_test.dart",
+      "needle": "report proves exact declarations and descriptors for every lane"
+    },
+    "schema.semantic": {
+      "path": "test/schema/conformance_report_test.dart",
+      "needle": "matrix includes every required semantic behavior"
+    },
+    "matrix.v1.stable": {
+      "path": "test/protocol/generated/generated_conformance_test.dart",
+      "needle": "v1 stable generated conformance matrix"
+    },
+    "matrix.v1.unstable": {
+      "path": "test/protocol/generated/generated_conformance_test.dart",
+      "needle": "v1 unstable generated conformance matrix"
+    },
+    "matrix.v2.stable": {
+      "path": "test/protocol/generated/generated_conformance_test.dart",
+      "needle": "v2 stable generated conformance matrix"
+    },
+    "matrix.v2.unstable": {
+      "path": "test/protocol/generated/generated_conformance_test.dart",
+      "needle": "v2 unstable generated conformance matrix"
+    },
+    "wire.v1.descriptors": {
+      "path": "test/protocol/generated/v1_generated_test.dart",
+      "needle": "method descriptors retain exact concrete correlations"
+    },
+    "wire.v1.defaults": {
+      "path": "test/protocol/generated/v1_generated_test.dart",
+      "needle": "initialize applies schema defaults and round trips"
+    },
+    "wire.v2.unions": {
+      "path": "test/protocol/generated/v2_generated_test.dart",
+      "needle": "open tagged unions preserve extension fields safely"
+    },
+    "wire.v2.removals": {
+      "path": "test/protocol/generated/v2_generated_test.dart",
+      "needle": "removed environment-variable auth does not leak into v2 inventory"
+    },
+    "app.initialize": {
+      "path": "test/application/app_lifecycle_test.dart",
+      "needle": "stable apps initialize before connect handlers and correlate types"
+    },
+    "app.version": {
+      "path": "test/application/app_lifecycle_test.dart",
+      "needle": "version mismatch rejects direct initialization"
+    },
+    "app.absolute-path": {
+      "path": "test/application/app_lifecycle_test.dart",
+      "needle": "session builder validates absolute paths"
+    },
+    "app.capability": {
+      "path": "test/application/session_test.dart",
+      "needle": "convenience gates optional methods but low-level request can proxy"
+    },
+    "app.prompt": {
+      "path": "test/application/session_test.dart",
+      "needle": "prompt turn buffers early updates and collects message text"
+    },
+    "app.nested": {
+      "path": "test/application/session_test.dart",
+      "needle": "nested client request completes without deadlock"
+    },
+    "app.v1.unstable": {
+      "path": "test/application/v1_unstable_test.dart",
+      "needle": "unstable provider lifecycle requires the explicit overlay app gate"
+    },
+    "jsonrpc.cancel": {
+      "path": "test/json_rpc/connection_test.dart",
+      "needle": "cancellation is cooperative and does not settle the request"
+    },
+    "jsonrpc.cancel-order": {
+      "path": "test/json_rpc/connection_test.dart",
+      "needle": "already-cancelled requests are written before cancellation"
+    },
+    "jsonrpc.methods": {
+      "path": "test/json_rpc/connection_batch_and_limits_test.dart",
+      "needle": "ACP codec validates methods before sending"
+    },
+    "jsonrpc.batch": {
+      "path": "test/json_rpc/connection_batch_and_limits_test.dart",
+      "needle": "batch outputs retain input order while handlers run concurrently"
+    },
+    "jsonrpc.invalid": {
+      "path": "test/json_rpc/id_and_codec_test.dart",
+      "needle": "rejects empty and mixed strict batches"
+    },
+    "transport.ndjson": {
+      "path": "test/transport/ndjson_stream_test.dart",
+      "needle": "writes one compact JSON value per line in call order"
+    },
+    "transport.line-limit": {
+      "path": "test/transport/ndjson_stream_test.dart",
+      "needle": "enforces the maximum line size"
+    },
+    "transport.stdio": {
+      "path": "test/integration/stdio_test.dart",
+      "needle": "client initializes and creates a session in a child agent"
+    },
+    "remote.http": {
+      "path": "test/remote/http_client_routing_test.dart",
+      "needle": "initializes, opens SSE, and routes session traffic exactly"
+    },
+    "remote.http-policy": {
+      "path": "test/remote/http_server_status_test.dart",
+      "needle": "HTTP request policy fails closed"
+    },
+    "remote.websocket-v2": {
+      "path": "test/remote/web_socket_server_v2_test.dart",
+      "needle": "v2 forwards inbound batches intact"
+    }
+  }
+}

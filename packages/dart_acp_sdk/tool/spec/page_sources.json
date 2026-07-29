@@ -1,0 +1,277 @@
+{
+  "formatVersion": 1,
+  "source": "https://agentclientprotocol.com/llms-full.txt",
+  "observedAt": "2026-07-29",
+  "sourceSha256": "59e8e8eb1e82fbc1813f7bf096b8e738fd0899ce335f6c78eeee4e0404abe365",
+  "sourceLineCount": 34147,
+  "sourceByteCount": 1397132,
+  "pageCount": 38,
+  "pages": [
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/agent-plan.md",
+      "sha256": "70d4bf400c1752545f9b671432484224b9a31c35367973f6cd8326ac78cc9a9a",
+      "startLine": 2425,
+      "endLine": 2507,
+      "headingCount": 4
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/authentication.md",
+      "sha256": "81b4973b7227951cd94682c87d923ac6552f7e37300cdf736935ff99e01b49ee",
+      "startLine": 2508,
+      "endLine": 2651,
+      "headingCount": 5
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/cancellation.md",
+      "sha256": "03930650d2b60f1335895ad899f8324dcd8fa5da09ca88043cfedd74a07b7b7a",
+      "startLine": 2652,
+      "endLine": 2719,
+      "headingCount": 3
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/content.md",
+      "sha256": "c1133eff2ea02a6708c62dfb5202880432dc3bb401e94474fef629ba1085151a",
+      "startLine": 2720,
+      "endLine": 2927,
+      "headingCount": 6
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/elicitation.md",
+      "sha256": "a45cb9a1275f922a6ae6922bdb87b205b5dd58a7d2bc3f4e8a05f56cdf7ce6d9",
+      "startLine": 2928,
+      "endLine": 3123,
+      "headingCount": 8
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/extensibility.md",
+      "sha256": "ccf83be547b577cb34b7680a65a73ddbce01b4f7a5935b5f254b9b9dffeb017e",
+      "startLine": 3124,
+      "endLine": 3260,
+      "headingCount": 5
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/file-system.md",
+      "sha256": "7141998bd91fb1d6ecba322bcd4e33447368b9c4950fd06629aedec157fb2012",
+      "startLine": 3261,
+      "endLine": 3369,
+      "headingCount": 3
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/initialization.md",
+      "sha256": "b7eafde447f072a42db516759c9bb3715dc73e11e1576d962e605df2277f4727",
+      "startLine": 3370,
+      "endLine": 3654,
+      "headingCount": 14
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/overview.md",
+      "sha256": "89c262cef32362dfc82fb1e1594a2942cca39a54adcabc4333ff033d5eb095f7",
+      "startLine": 3655,
+      "endLine": 3839,
+      "headingCount": 15
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/prompt-turn.md",
+      "sha256": "388887a798b0a686c97cab176ef4a8f9d12061cd6acb57a58407995321651a45",
+      "startLine": 3840,
+      "endLine": 4190,
+      "headingCount": 11
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/schema.md",
+      "sha256": "f4055e2a9a50f30992ce7e93de0b0a5a89c52fef0032b37d82b1aff65f46b69e",
+      "startLine": 4191,
+      "endLine": 9985,
+      "headingCount": 190
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/session-config-options.md",
+      "sha256": "3d3159ba82c5bc0e4faac5208963da1c4b8783f5cfb14635d51ad100a9db9964",
+      "startLine": 9986,
+      "endLine": 10332,
+      "headingCount": 11
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/session-delete.md",
+      "sha256": "fd2e41d2f3b80f9216a78a80dd1d4e9a15eb865151ed215bde22bea4014f2800",
+      "startLine": 10333,
+      "endLine": 10426,
+      "headingCount": 3
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/session-list.md",
+      "sha256": "18cd7e311e33a3ec68adda894b8c2621469a29ea93d279f769637e65709cff9f",
+      "startLine": 10427,
+      "endLine": 10657,
+      "headingCount": 5
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/session-modes.md",
+      "sha256": "96b39531f57f11f555b4e0841b64d6106f76a457ea803a65388abceec97884a5",
+      "startLine": 10658,
+      "endLine": 10831,
+      "headingCount": 7
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/session-setup.md",
+      "sha256": "c821363415335ebd739111ee3304b6d239974970c946818e19bcdbf30178f996",
+      "startLine": 10832,
+      "endLine": 11383,
+      "headingCount": 19
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/slash-commands.md",
+      "sha256": "7235e30b00990e92c2c84ecaca73ecbbb8b7c494e04a2afaff33b3c254e0929d",
+      "startLine": 11384,
+      "endLine": 11481,
+      "headingCount": 5
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/terminals.md",
+      "sha256": "406a690eeaa2e42b3b15d85e04d77d13eb7e4a90c9059880eb6f003cae418de3",
+      "startLine": 11482,
+      "endLine": 11759,
+      "headingCount": 8
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/tool-calls.md",
+      "sha256": "29a1e8684f4fe3a67dd97443994c2124c8570040ccac5175c22efa20d9e06c6c",
+      "startLine": 11760,
+      "endLine": 12066,
+      "headingCount": 10
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/transports.md",
+      "sha256": "fb9c2f3710965920680a8a82b6ffad9c68e03a96b7e22d98e5da0e7e4f2370f2",
+      "startLine": 12067,
+      "endLine": 12125,
+      "headingCount": 3
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/agent-plan.md",
+      "sha256": "295ca423d300dd00fd1848cbba951250f033b6a4dbc495e97562bc664f98b3b0",
+      "startLine": 12126,
+      "endLine": 12237,
+      "headingCount": 6
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/authentication.md",
+      "sha256": "71eeeec9e701a650072542d526cc4ec8ff67eb4f3ceb6984de3703ec3c633a7d",
+      "startLine": 12238,
+      "endLine": 12381,
+      "headingCount": 5
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/cancellation.md",
+      "sha256": "3c1baa5f147ddaaf47e3d170fd0cef7f8562275454ed121e58f892d11da2d0b8",
+      "startLine": 12382,
+      "endLine": 12450,
+      "headingCount": 3
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/content.md",
+      "sha256": "f1d71726dc0745a1d3af1f06634b6ac4483c32ea0231d124a82517b9ab7dc82b",
+      "startLine": 12451,
+      "endLine": 12671,
+      "headingCount": 6
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/elicitation.md",
+      "sha256": "04ba244dc84a7b45bcd60da7b97707232170602e758584454e422cce0b630727",
+      "startLine": 12672,
+      "endLine": 12866,
+      "headingCount": 8
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/extensibility.md",
+      "sha256": "c474c90a01e8bd525cab1572ff3bcfcd3ec6f6423acbe875e0036d1b3f44481a",
+      "startLine": 12867,
+      "endLine": 13020,
+      "headingCount": 6
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/initialization.md",
+      "sha256": "be664a077d6d015b8ab786b54b678d8cc529d56e58a9ccd8df7132f94dcc935c",
+      "startLine": 13021,
+      "endLine": 13271,
+      "headingCount": 10
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/migration.md",
+      "sha256": "bbddf7e5c25cb727ce38e12e25ad9219a0b739ed54df04d6714b1f093181aef3",
+      "startLine": 13272,
+      "endLine": 14020,
+      "headingCount": 43
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/overview.md",
+      "sha256": "47ed7d2917ad0da192f84ca5afaa743a07b90fb9e5f6ba22f940159abf686c11",
+      "startLine": 14021,
+      "endLine": 14185,
+      "headingCount": 14
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/prompt-lifecycle.md",
+      "sha256": "762d0914fdfb0a205a4b0c1993290982090e42d226bb15d252aa79c683abdcad",
+      "startLine": 14186,
+      "endLine": 14704,
+      "headingCount": 12
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/schema.md",
+      "sha256": "9bb636803a29e84080cfe4b46776eaa7fb4136d4b4d03252a9221c9840ce6a1d",
+      "startLine": 14705,
+      "endLine": 21087,
+      "headingCount": 184
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/session-config-options.md",
+      "sha256": "3125ffdd1c61abb964a08e36c4a5322e1119bf312779ce6dc1b0458e731215b6",
+      "startLine": 21088,
+      "endLine": 21435,
+      "headingCount": 10
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/session-delete.md",
+      "sha256": "31ec44061154d49a9d35db9faee0f0f02fdb4f9639541f4ee132c3fd4cfe334e",
+      "startLine": 21436,
+      "endLine": 21526,
+      "headingCount": 3
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/session-list.md",
+      "sha256": "435d1aad423f0b6cb00dacd57271ecf6189afc550848c95d587fe463dd725bc7",
+      "startLine": 21527,
+      "endLine": 21738,
+      "headingCount": 4
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/session-setup.md",
+      "sha256": "cd8c853e3fa6aa9226e9ea0cb1653c4eb3183d7120c44121bbb472a25d0cd344",
+      "startLine": 21739,
+      "endLine": 22190,
+      "headingCount": 11
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/slash-commands.md",
+      "sha256": "a1ffcfc5fdc9a22ab5709344c3d8bf0cb023a742ab2966c88c96a74601001979",
+      "startLine": 22191,
+      "endLine": 22294,
+      "headingCount": 5
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/tool-calls.md",
+      "sha256": "ee90a8736140a3d74c274f43ef54a7fbf633ccc2b30312e31108ad4169d28d5c",
+      "startLine": 22295,
+      "endLine": 22838,
+      "headingCount": 11
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/transports.md",
+      "sha256": "b3ce02ff9274cde61827415e53063f6b3f8a7c770c9db6e69a2fa0304cc4567f",
+      "startLine": 22839,
+      "endLine": 22937,
+      "headingCount": 4
+    }
+  ]
+}

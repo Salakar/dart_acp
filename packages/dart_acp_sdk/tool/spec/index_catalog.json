@@ -1,0 +1,631 @@
+{
+  "formatVersion": 1,
+  "observedAt": "2026-07-29",
+  "source": "https://agentclientprotocol.com/llms.txt",
+  "sourceSha256": "fea0623e5ee1639bb457f6e7082e84ccdf16bbb2334ab394cbf89e954510379c",
+  "sourceLineCount": 131,
+  "sourceByteCount": 15419,
+  "pageCount": 122,
+  "rationales": {
+    "traced": "Current protocol page; every page-level rule is traced in requirements.json and schema pages delegate exhaustive wire evidence to the four-lane conformance report.",
+    "historical-context": "Release or update history only; current protocol pages define behavior and the pinned official schemas win for wire shape.",
+    "proposal-context": "Proposal or decision history only; current protocol pages define behavior and the pinned official schemas win for wire shape.",
+    "informational-overlap": "Informational overview; its runtime concepts are covered by the traced versioned protocol pages.",
+    "ecosystem-catalog": "Ecosystem or implementation listing; it imposes no dart_acp_sdk runtime behavior.",
+    "project-governance": "Project governance material; it imposes no SDK runtime or wire requirement.",
+    "project-information": "Project resource material; it imposes no SDK runtime or wire requirement.",
+    "website-api": "Website API description, not the ACP peer-to-peer JSON-RPC protocol implemented by this package."
+  },
+  "rows": [
+    {
+      "url": "https://agentclientprotocol.com/announcements/acp-agent-registry-stabilized.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/acp-v2-draft.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/additional-directories-stabilized.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/boolean-config-option-stabilized.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/elicitation-stabilized.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/implementation-information.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/logout-method-stabilized.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/message-id-stabilized.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/model-config-category-stabilized.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/request-cancellation-stabilized.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/sdk-1-0-releases.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/sergey-ignatov-lead-maintainer.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/session-close-stabilized.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/session-config-options-stabilized.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/session-delete-stabilized.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/session-info-update-stabilized.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/session-list-stabilized.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/session-resume-stabilized.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/session-usage-stabilized.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/announcements/transports-working-group.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/brand.md",
+      "disposition": "project-information",
+      "rationaleId": "project-information"
+    },
+    {
+      "url": "https://agentclientprotocol.com/community/code-of-conduct.md",
+      "disposition": "project-governance",
+      "rationaleId": "project-governance"
+    },
+    {
+      "url": "https://agentclientprotocol.com/community/communication.md",
+      "disposition": "project-governance",
+      "rationaleId": "project-governance"
+    },
+    {
+      "url": "https://agentclientprotocol.com/community/contributing.md",
+      "disposition": "project-governance",
+      "rationaleId": "project-governance"
+    },
+    {
+      "url": "https://agentclientprotocol.com/community/governance.md",
+      "disposition": "project-governance",
+      "rationaleId": "project-governance"
+    },
+    {
+      "url": "https://agentclientprotocol.com/community/working-interest-groups.md",
+      "disposition": "project-governance",
+      "rationaleId": "project-governance"
+    },
+    {
+      "url": "https://agentclientprotocol.com/get-started/agents.md",
+      "disposition": "ecosystem-catalog",
+      "rationaleId": "ecosystem-catalog"
+    },
+    {
+      "url": "https://agentclientprotocol.com/get-started/architecture.md",
+      "disposition": "informational-overlap",
+      "rationaleId": "informational-overlap"
+    },
+    {
+      "url": "https://agentclientprotocol.com/get-started/clients.md",
+      "disposition": "ecosystem-catalog",
+      "rationaleId": "ecosystem-catalog"
+    },
+    {
+      "url": "https://agentclientprotocol.com/get-started/introduction.md",
+      "disposition": "informational-overlap",
+      "rationaleId": "informational-overlap"
+    },
+    {
+      "url": "https://agentclientprotocol.com/get-started/registry.md",
+      "disposition": "ecosystem-catalog",
+      "rationaleId": "ecosystem-catalog"
+    },
+    {
+      "url": "https://agentclientprotocol.com/libraries/community.md",
+      "disposition": "ecosystem-catalog",
+      "rationaleId": "ecosystem-catalog"
+    },
+    {
+      "url": "https://agentclientprotocol.com/libraries/java.md",
+      "disposition": "ecosystem-catalog",
+      "rationaleId": "ecosystem-catalog"
+    },
+    {
+      "url": "https://agentclientprotocol.com/libraries/kotlin.md",
+      "disposition": "ecosystem-catalog",
+      "rationaleId": "ecosystem-catalog"
+    },
+    {
+      "url": "https://agentclientprotocol.com/libraries/python.md",
+      "disposition": "ecosystem-catalog",
+      "rationaleId": "ecosystem-catalog"
+    },
+    {
+      "url": "https://agentclientprotocol.com/libraries/rust.md",
+      "disposition": "ecosystem-catalog",
+      "rationaleId": "ecosystem-catalog"
+    },
+    {
+      "url": "https://agentclientprotocol.com/libraries/typescript.md",
+      "disposition": "ecosystem-catalog",
+      "rationaleId": "ecosystem-catalog"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/agent-plan.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/authentication.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/cancellation.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/content.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/elicitation.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/extensibility.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/file-system.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/initialization.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/overview.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/prompt-turn.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/schema.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/session-config-options.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/session-delete.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/session-list.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/session-modes.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/session-setup.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/slash-commands.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/terminals.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/tool-calls.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v1/transports.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/agent-plan.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/authentication.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/cancellation.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/content.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/elicitation.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/extensibility.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/initialization.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/migration.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/overview.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/prompt-lifecycle.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/schema.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/session-config-options.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/session-delete.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/session-list.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/session-setup.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/slash-commands.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/tool-calls.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/transports.md",
+      "disposition": "traced",
+      "rationaleId": "traced"
+    },
+    {
+      "url": "https://agentclientprotocol.com/publications.md",
+      "disposition": "project-information",
+      "rationaleId": "project-information"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/about.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/acp-agent-registry.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/additional-directories.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/auth-methods.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/boolean-config-option.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/custom-llm-endpoint.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/diff-delete.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/elicitation.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/end-turn-token-usage.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/get-auth-state.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/introduce-rfd-process.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/logout-method.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/mcp-over-acp.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/message-id.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/meta-propagation.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/model-config-category.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/next-edit-suggestions.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/plan-operations.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/proxy-chains.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/request-cancellation.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/rust-sdk-v1.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/session-close.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/session-config-options.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/session-delete.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/session-fork.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/session-info-update.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/session-list.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/session-resume.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/session-usage.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/streamable-http-websocket-transport.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/tool-call-name.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/updates.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/v2/client-filesystem-terminal-capabilities.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/v2/diff-file-states.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/v2/enum-variant-extension.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/v2/message-updates.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/v2/overview.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/v2/permission-requests.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/v2/plan-variants.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/v2/prompt.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/v2/required-session-methods.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/v2/session-resume-replay.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/v2/terminal-output.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/rfds/v2/tool-call-updates.md",
+      "disposition": "proposal-context",
+      "rationaleId": "proposal-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/updates.md",
+      "disposition": "historical-context",
+      "rationaleId": "historical-context"
+    },
+    {
+      "url": "https://agentclientprotocol.com/api-reference/openapi.json",
+      "disposition": "website-api",
+      "rationaleId": "website-api"
+    }
+  ]
+}

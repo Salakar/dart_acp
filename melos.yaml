@@ -1,0 +1,76 @@
+name: dart_acp_sdk_workspace
+
+packages:
+  - packages/**
+
+command:
+  bootstrap:
+    usePubspecOverrides: true
+
+scripts:
+  codegen:
+    run: dart run melos exec --depends-on=build_runner -- "dart run tool/schema/generate.dart && dart run build_runner build && dart format lib/src/protocol/v1/generated lib/src/protocol/v2/generated"
+    description: Generate and format schema-derived Dart and json_serializable sources.
+  schema:check:
+    run: dart run melos exec -- "dart run tool/schema/generate.dart --check"
+    description: Verify committed sources match the pinned offline schemas.
+  schema:sync:
+    run: dart run melos exec -- "dart run tool/schema/sync.dart --update"
+    description: Pull live official/SDK schemas, verify drift, and regenerate.
+  schema:sync:check:
+    run: dart run melos exec -- "dart run tool/schema/sync.dart --check"
+    description: Check whether pinned schemas still match both upstream main branches.
+  spec:check:
+    run: dart run melos exec -- "dart run tool/spec/check.dart"
+    description: Verify the pinned live-spec requirement matrix offline.
+  reference:check:
+    run: dart run tool/check_reference_test_matrix.dart
+    description: Verify the complete pinned behavioral test mapping offline.
+  analyze:
+    run: dart run melos exec -- "dart analyze ."
+    description: Run static analysis in every package.
+  format:
+    run: dart run melos exec -- "dart format --set-exit-if-changed ."
+    description: Check Dart formatting in every package.
+  test:
+    run: dart run melos exec -- "dart test"
+    description: Run package tests.
+  test:web:
+    run: dart run melos exec -- "dart run tool/run_chrome_tests.dart"
+    description: Run the complete dart2js suite in Chrome with its loopback helper.
+  coverage:vm:
+    run: dart run melos exec -- "dart test --coverage-path=coverage/vm.info --branch-coverage"
+    description: Run VM tests and emit LCOV coverage.
+  coverage:web:
+    run: dart run melos exec -- "dart run tool/run_chrome_tests.dart --coverage-path=coverage/web.info --branch-coverage"
+    description: Run the managed Chrome suite and emit browser LCOV coverage.
+  coverage:merge:
+    run: dart run tool/merge_coverage.dart --output=packages/dart_acp_sdk/coverage/lcov.info packages/dart_acp_sdk/coverage/vm.info packages/dart_acp_sdk/coverage/web.info
+    description: Merge VM and browser LCOV reports.
+  coverage:
+    run: dart run melos run coverage:vm && dart run melos run coverage:web && dart run melos run coverage:merge
+    description: Collect and merge VM and browser coverage.
+  publish:dry-run:
+    run: dart run melos exec --no-private -- "dart pub publish --dry-run"
+    description: Validate publishable packages without publishing.
+  examples:smoke:
+    run: dart run melos exec -- "dart run tool/smoke_examples.dart"
+    description: Run every executable example with deterministic smoke-sized work.
+  benchmarks:smoke:
+    run: dart run melos exec -- "dart run tool/smoke_benchmarks.dart"
+    description: Run one smoke-sized iteration of every benchmark.
+  tool:test:
+    run: dart test test
+    description: Test repository validation tools.
+  verify:file-sizes:
+    run: dart run tool/check_file_sizes.dart
+    description: Report handwritten file-size guidance; generated files are exempt.
+  verify:web-compile:
+    run: dart run tool/check_web_compile.dart
+    description: Compile every public stable and experimental library for web.
+  verify:release-hygiene:
+    run: dart run tool/check_release_hygiene.dart
+    description: Audit release metadata, links, assets, dependencies, and package boundaries.
+  verify:coverage:
+    run: dart run tool/check_coverage.dart packages/dart_acp_sdk/coverage/lcov.info
+    description: Enforce the main-package line-coverage threshold.

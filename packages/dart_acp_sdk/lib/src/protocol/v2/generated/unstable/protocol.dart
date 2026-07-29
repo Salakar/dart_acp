@@ -1,0 +1,7 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND.
+// coverage-exempt: directives-only
+/// Generated ACP v2 unstable overlay models and typed method descriptors.
+library;
+
+export 'method_descriptors.dart';
+export 'models.dart';

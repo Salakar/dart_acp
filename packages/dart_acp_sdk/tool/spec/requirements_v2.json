@@ -1,0 +1,898 @@
+{
+  "formatVersion": 1,
+  "protocolVersion": 2,
+  "pageCount": 18,
+  "pages": [
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/agent-plan.md",
+      "implementationIds": ["wire.v2", "application.v2"],
+      "testIds": [
+        "matrix.v2.stable",
+        "matrix.v2.unstable",
+        "wire.v2.unions"
+      ],
+      "headings": [
+        "Creating Plans",
+        "Item-Based Plans",
+        "Extensibility",
+        "Plan Entries",
+        "Updating Plans",
+        "Dynamic Planning"
+      ],
+      "requirements": [
+        {
+          "id": "v2.agent-plan.create",
+          "sections": [
+            "Creating Plans",
+            "Item-Based Plans",
+            "Extensibility",
+            "Plan Entries"
+          ],
+          "summary": "Plans are ID-keyed typed updates; stable item plans carry complete priority/status entries while unknown future plan types remain preservable.",
+          "rationaleId": "typed-contract"
+        },
+        {
+          "id": "v2.agent-plan.replace",
+          "sections": ["Updating Plans", "Dynamic Planning"],
+          "summary": "Each update replaces the addressed plan content and agents may evolve multiple plans independently.",
+          "rationaleId": "typed-contract"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/authentication.md",
+      "implementationIds": ["wire.v2", "application.v2"],
+      "testIds": [
+        "matrix.v2.stable",
+        "matrix.v2.unstable",
+        "wire.v2.removals"
+      ],
+      "headings": [
+        "Advertising Authentication",
+        "Authentication Method Types",
+        "Authenticating",
+        "Logging Out",
+        "Active Sessions"
+      ],
+      "requirements": [
+        {
+          "id": "v2.authentication.surface",
+          "sections": [
+            "Advertising Authentication",
+            "Authentication Method Types",
+            "Authenticating",
+            "Logging Out"
+          ],
+          "summary": "A non-empty authMethods inventory advertises auth/login and auth/logout together; clients select a typed advertised method and never call either method when the inventory is absent or empty.",
+          "rationaleId": "runtime-enforced"
+        },
+        {
+          "id": "v2.authentication.sessions",
+          "sections": ["Active Sessions"],
+          "summary": "Post-logout active-session behavior and reauthentication UX remain explicit agent/client policy rather than an SDK assumption.",
+          "rationaleId": "caller-policy"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/cancellation.md",
+      "implementationIds": ["wire.v2", "jsonrpc", "application.v2"],
+      "testIds": [
+        "matrix.v2.stable",
+        "jsonrpc.cancel",
+        "jsonrpc.cancel-order"
+      ],
+      "headings": [
+        "$/cancel_request Notification",
+        "Internal Cancellation",
+        "Example: Cascading Cancellation Flow"
+      ],
+      "requirements": [
+        {
+          "id": "v2.cancellation.cooperative",
+          "sections": [
+            "$/cancel_request Notification",
+            "Internal Cancellation",
+            "Example: Cascading Cancellation Flow"
+          ],
+          "summary": "Request cancellation remains cooperative and cascading, and the original request still receives a valid result or -32800 response.",
+          "rationaleId": "runtime-enforced"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/content.md",
+      "implementationIds": ["wire.v2"],
+      "testIds": ["matrix.v2.stable", "matrix.v2.unstable"],
+      "headings": [
+        "Content Types",
+        "Text Content",
+        "Image Content",
+        "Audio Content",
+        "Embedded Resource",
+        "Resource Link"
+      ],
+      "requirements": [
+        {
+          "id": "v2.content.baseline",
+          "sections": ["Content Types", "Text Content"],
+          "summary": "All session-capable agents accept text prompt content and preserve its optional annotations.",
+          "rationaleId": "typed-contract"
+        },
+        {
+          "id": "v2.content.rich",
+          "sections": [
+            "Image Content",
+            "Audio Content",
+            "Embedded Resource",
+            "Resource Link"
+          ],
+          "summary": "Rich content uses the exact media/resource shapes and appears only when the negotiated object capability permits it; resource links remain baseline.",
+          "rationaleId": "typed-contract"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/elicitation.md",
+      "implementationIds": ["wire.v2", "application.v2"],
+      "testIds": [
+        "matrix.v2.stable",
+        "matrix.v2.unstable",
+        "schema.semantic"
+      ],
+      "headings": [
+        "User interaction requirements",
+        "Checking support",
+        "Creating an elicitation",
+        "Form mode",
+        "URL mode",
+        "Responses",
+        "URL completion",
+        "URL security"
+      ],
+      "requirements": [
+        {
+          "id": "v2.elicitation.user-controls",
+          "sections": ["User interaction requirements"],
+          "summary": "Clients identify the requesting agent, protect privacy, present context, allow review, and provide decline/cancel controls.",
+          "rationaleId": "caller-policy"
+        },
+        {
+          "id": "v2.elicitation.gating",
+          "sections": ["Checking support", "Creating an elicitation"],
+          "summary": "Each mode requires an explicit non-null object capability; elicitations bind to the receiving connection and verified user, not an untrusted session identifier.",
+          "rationaleId": "runtime-enforced"
+        },
+        {
+          "id": "v2.elicitation.form-security",
+          "sections": ["Form mode"],
+          "summary": "Both sides validate form schemas and values; form mode never collects access credentials or transaction secrets and cannot replace an unavailable safe URL flow.",
+          "rationaleId": "caller-policy"
+        },
+        {
+          "id": "v2.elicitation.url-security",
+          "sections": ["URL mode", "Responses", "URL completion", "URL security"],
+          "summary": "URL mode keeps tokens off ACP, requires explicit informed navigation in an isolated context, scopes opaque completion IDs to the connection/user, and handles decline/cancel/failure without assuming success.",
+          "rationaleId": "caller-policy"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/extensibility.md",
+      "implementationIds": ["wire.v2", "wire.common", "jsonrpc"],
+      "testIds": [
+        "matrix.v2.stable",
+        "matrix.v2.unstable",
+        "wire.v2.unions",
+        "jsonrpc.methods"
+      ],
+      "headings": [
+        "The `_meta` Field",
+        "Extension Methods",
+        "Custom Requests",
+        "Custom Notifications",
+        "Enum and Tagged-Union Variants",
+        "Advertising Custom Capabilities"
+      ],
+      "requirements": [
+        {
+          "id": "v2.extensibility.meta-methods",
+          "sections": [
+            "The `_meta` Field",
+            "Extension Methods",
+            "Custom Requests",
+            "Custom Notifications"
+          ],
+          "summary": "Extensions stay in _meta or underscore-prefixed methods, requests are answered, and unknown notifications are ignored.",
+          "rationaleId": "runtime-enforced"
+        },
+        {
+          "id": "v2.extensibility.variants",
+          "sections": [
+            "Enum and Tagged-Union Variants",
+            "Advertising Custom Capabilities"
+          ],
+          "summary": "Custom variant values begin with underscore, future reserved values remain preservable, and malformed payloads for known tags are rejected instead of misclassified as unknown.",
+          "rationaleId": "runtime-enforced"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/initialization.md",
+      "implementationIds": ["wire.v2", "application.v2", "jsonrpc"],
+      "testIds": [
+        "matrix.v2.stable",
+        "matrix.v2.unstable",
+        "app.version",
+        "wire.v2.unions"
+      ],
+      "headings": [
+        "Protocol version",
+        "Version Negotiation",
+        "Capabilities",
+        "Client Capabilities",
+        "Elicitation",
+        "Agent Capabilities",
+        "Session Capabilities",
+        "Session Prompt Capabilities",
+        "Session MCP Capabilities",
+        "Implementation Information"
+      ],
+      "requirements": [
+        {
+          "id": "v2.initialization.version",
+          "sections": ["Protocol version", "Version Negotiation"],
+          "summary": "v2 is selected only through explicit version negotiation, and unstable overlays require independent capability or feature gates.",
+          "rationaleId": "runtime-enforced"
+        },
+        {
+          "id": "v2.initialization.client-capabilities",
+          "sections": ["Capabilities", "Client Capabilities", "Elicitation"],
+          "summary": "Omitted/null object markers are unsupported and client elicitation modes are individually explicit.",
+          "rationaleId": "runtime-enforced"
+        },
+        {
+          "id": "v2.initialization.agent-capabilities",
+          "sections": [
+            "Agent Capabilities",
+            "Session Capabilities",
+            "Session Prompt Capabilities",
+            "Session MCP Capabilities"
+          ],
+          "summary": "Advertising the session group commits the agent to v2 baseline session methods while richer prompt, MCP, delete, and roots features retain object markers.",
+          "rationaleId": "runtime-enforced"
+        },
+        {
+          "id": "v2.initialization.info",
+          "sections": ["Implementation Information"],
+          "summary": "Both initialization directions carry required role-agnostic typed info plus role-agnostic capabilities.",
+          "rationaleId": "typed-contract"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/migration.md",
+      "implementationIds": [
+        "wire.v1",
+        "wire.v2",
+        "application.v1",
+        "application.v2",
+        "jsonrpc",
+        "transport.stdio"
+      ],
+      "testIds": [
+        "matrix.v1.stable",
+        "matrix.v1.unstable",
+        "matrix.v2.stable",
+        "matrix.v2.unstable",
+        "wire.v2.removals",
+        "wire.v2.unions",
+        "jsonrpc.batch"
+      ],
+      "headings": [
+        "Scope: stable v2 and draft surfaces",
+        "Version negotiation",
+        "At a glance",
+        "Method changes",
+        "`session/update` variant changes",
+        "Initialization",
+        "Role-agnostic `info` and `capabilities`",
+        "Support markers are objects, not booleans",
+        "Capability reorganization",
+        "Authentication",
+        "Auth methods",
+        "The new prompt lifecycle",
+        "v1: the response is the turn",
+        "v2: the response is an acknowledgment",
+        "Session states",
+        "Cancellation",
+        "Why this matters beyond bookkeeping",
+        "Messages and message IDs",
+        "Message IDs are required",
+        "Whole-message upserts",
+        "Tool calls",
+        "One upsert notification",
+        "Streaming tool-call content",
+        "Agent-owned terminal display",
+        "Diff content",
+        "Permission requests",
+        "Plans",
+        "Session setup and lifecycle",
+        "`session/load` is gone. `session/resume` does both",
+        "Consistent lifecycle requests",
+        "Baseline methods",
+        "Session modes become config options",
+        "Client file system and terminal execution removed",
+        "MCP server configuration",
+        "Content blocks",
+        "Slash commands",
+        "Consistent ID naming",
+        "Extensibility and forward compatibility",
+        "Transports",
+        "Migration checklist: Agents",
+        "Migration checklist: Clients",
+        "Migration checklist: SDKs",
+        "Supporting v1 and v2 side by side"
+      ],
+      "requirements": [
+        {
+          "id": "v2.migration.scope",
+          "sections": [
+            "Scope: stable v2 and draft surfaces",
+            "Version negotiation"
+          ],
+          "summary": "v2 remains explicitly negotiated and feature-gated; its unstable schema is an additional opt-in overlay, never implied by protocolVersion 2.",
+          "rationaleId": "versioned-spec-wins"
+        },
+        {
+          "id": "v2.migration.inventory",
+          "sections": [
+            "At a glance",
+            "Method changes",
+            "`session/update` variant changes"
+          ],
+          "summary": "The v1 and v2 method/update inventories remain physically isolated, including renamed auth, removed load/modes/client execution APIs, and new upsert/state/terminal variants.",
+          "rationaleId": "versioned-spec-wins"
+        },
+        {
+          "id": "v2.migration.initialization",
+          "sections": [
+            "Initialization",
+            "Role-agnostic `info` and `capabilities`",
+            "Support markers are objects, not booleans",
+            "Capability reorganization"
+          ],
+          "summary": "v2 initialization requires shared info/capabilities names, presence-based object markers, nested session groups, and baseline methods when session support is advertised.",
+          "rationaleId": "versioned-spec-wins"
+        },
+        {
+          "id": "v2.migration.auth",
+          "sections": ["Authentication", "Auth methods"],
+          "summary": "authenticate/logout become auth/login and auth/logout, methodId/type are explicit, and non-empty authMethods advertises both operations.",
+          "rationaleId": "versioned-spec-wins"
+        },
+        {
+          "id": "v2.migration.prompt",
+          "sections": [
+            "The new prompt lifecycle",
+            "v1: the response is the turn",
+            "v2: the response is an acknowledgment",
+            "Session states",
+            "Cancellation",
+            "Why this matters beyond bookkeeping"
+          ],
+          "summary": "The prompt response acknowledges acceptance; running/requires_action/idle updates own progress and completion, including cancelled idle after pending updates.",
+          "rationaleId": "versioned-spec-wins"
+        },
+        {
+          "id": "v2.migration.messages",
+          "sections": [
+            "Messages and message IDs",
+            "Message IDs are required",
+            "Whole-message upserts"
+          ],
+          "summary": "Agent-owned message IDs are required and whole-message/chunk updates apply replace-clear-append semantics.",
+          "rationaleId": "versioned-spec-wins"
+        },
+        {
+          "id": "v2.migration.upserts",
+          "sections": [
+            "Tool calls",
+            "One upsert notification",
+            "Streaming tool-call content",
+            "Agent-owned terminal display",
+            "Diff content",
+            "Permission requests",
+            "Plans"
+          ],
+          "summary": "Tool calls, terminals, diffs, permissions, and plans use ID-keyed extensible upserts with explicit patch, streaming, safe-display, absolute-path, and fail-closed permission semantics.",
+          "rationaleId": "versioned-spec-wins"
+        },
+        {
+          "id": "v2.migration.sessions",
+          "sections": [
+            "Session setup and lifecycle",
+            "`session/load` is gone. `session/resume` does both",
+            "Consistent lifecycle requests",
+            "Baseline methods",
+            "Session modes become config options",
+            "Client file system and terminal execution removed",
+            "MCP server configuration",
+            "Content blocks",
+            "Slash commands",
+            "Consistent ID naming"
+          ],
+          "summary": "resume absorbs load replay, list/resume/close are baseline, modes become config, client execution moves to MCP, and all v2 names/content shapes follow the new consistent inventory.",
+          "rationaleId": "versioned-spec-wins"
+        },
+        {
+          "id": "v2.migration.compatibility",
+          "sections": ["Extensibility and forward compatibility", "Transports"],
+          "summary": "Unknown future values are preserved, known malformed tags are rejected, underscore values are custom, and v2 additionally follows JSON-RPC batch rules.",
+          "rationaleId": "versioned-spec-wins"
+        },
+        {
+          "id": "v2.migration.checklists",
+          "sections": [
+            "Migration checklist: Agents",
+            "Migration checklist: Clients",
+            "Migration checklist: SDKs",
+            "Supporting v1 and v2 side by side"
+          ],
+          "summary": "Agents, clients, and SDKs keep v1 working, negotiate each connection, gate drafts, preserve unknowns, and test both protocol generations independently.",
+          "rationaleId": "versioned-spec-wins"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/overview.md",
+      "implementationIds": ["wire.v2", "application.v2", "jsonrpc"],
+      "testIds": [
+        "matrix.v2.stable",
+        "matrix.v2.unstable",
+        "wire.v2.unions"
+      ],
+      "headings": [
+        "Communication Model",
+        "Message Flow",
+        "Agent",
+        "Baseline Methods",
+        "Notifications",
+        "Client",
+        "Baseline Methods",
+        "Optional Methods",
+        "Notifications",
+        "Argument requirements",
+        "Error Handling",
+        "Conventions",
+        "Extensibility",
+        "Next Steps"
+      ],
+      "requirements": [
+        {
+          "id": "v2.overview.flow",
+          "sections": ["Communication Model", "Message Flow"],
+          "summary": "v2 is bidirectional JSON-RPC with initialization, session lifecycle, prompt acknowledgment, notification-owned progress/completion, and nested client interactions.",
+          "rationaleId": "runtime-enforced"
+        },
+        {
+          "id": "v2.overview.agent",
+          "sections": ["Agent", "Baseline Methods", "Notifications"],
+          "summary": "The agent's v2 baseline requests and notifications are represented by version-isolated direction-safe descriptors.",
+          "rationaleId": "typed-contract"
+        },
+        {
+          "id": "v2.overview.client",
+          "sections": [
+            "Client",
+            "Baseline Methods",
+            "Optional Methods",
+            "Notifications"
+          ],
+          "summary": "The client's v2 baseline/optional requests and notifications are represented without reintroducing removed v1 filesystem or execution methods.",
+          "rationaleId": "typed-contract"
+        },
+        {
+          "id": "v2.overview.conventions",
+          "sections": [
+            "Argument requirements",
+            "Error Handling",
+            "Conventions",
+            "Extensibility",
+            "Next Steps"
+          ],
+          "summary": "Paths are absolute, JSON-RPC errors stay structured, exact names and patch semantics are preserved, and unknown future variants remain safe and round-trippable.",
+          "rationaleId": "runtime-enforced"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/prompt-lifecycle.md",
+      "implementationIds": ["wire.v2", "application.v2", "jsonrpc"],
+      "testIds": [
+        "matrix.v2.stable",
+        "matrix.v2.unstable",
+        "schema.semantic",
+        "jsonrpc.cancel"
+      ],
+      "headings": [
+        "Prompt Lifecycle",
+        "1. User Message",
+        "2. Prompt Accepted",
+        "3. Agent Reports Output",
+        "Message IDs",
+        "Session Usage Updates",
+        "4. Report Completion",
+        "5. Tool Invocation and Status Reporting",
+        "6. Continue Conversation",
+        "Stop Reasons",
+        "Session States",
+        "Cancellation"
+      ],
+      "requirements": [
+        {
+          "id": "v2.prompt.accept",
+          "sections": [
+            "Prompt Lifecycle",
+            "1. User Message",
+            "2. Prompt Accepted"
+          ],
+          "summary": "Prompts follow initialization/setup and negotiated content; the response acknowledges acceptance and the agent then reports the inserted user message with its own ID.",
+          "rationaleId": "runtime-enforced"
+        },
+        {
+          "id": "v2.prompt.output",
+          "sections": [
+            "3. Agent Reports Output",
+            "Message IDs",
+            "Session Usage Updates"
+          ],
+          "summary": "Running work emits state and message updates with required opaque IDs; whole content replaces/clears, chunks append, and usage/cost fields retain required numeric/currency semantics.",
+          "rationaleId": "runtime-enforced"
+        },
+        {
+          "id": "v2.prompt.complete",
+          "sections": [
+            "4. Report Completion",
+            "5. Tool Invocation and Status Reporting",
+            "6. Continue Conversation",
+            "Stop Reasons",
+            "Session States"
+          ],
+          "summary": "Foreground progress is running/requires_action/idle; completion is an idle update with a stop reason, while background updates may continue without changing state.",
+          "rationaleId": "runtime-enforced"
+        },
+        {
+          "id": "v2.prompt.cancel",
+          "sections": ["Cancellation"],
+          "summary": "Cancellation resolves pending permissions, stops work, accepts late tool updates until an idle-cancelled update, and reports cancellation semantically rather than as a generic error.",
+          "rationaleId": "runtime-enforced"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/schema.md",
+      "implementationIds": ["wire.v2", "wire.common", "schema.evidence"],
+      "testIds": [
+        "schema.pin",
+        "schema.report",
+        "schema.semantic",
+        "matrix.v2.stable",
+        "matrix.v2.unstable"
+      ],
+      "schemaDelegate": {
+        "lanes": ["v2Stable", "v2Unstable"],
+        "definitionCount": 433,
+        "methodCount": 52
+      },
+      "requirements": [
+        {
+          "id": "v2.schema.exhaustive",
+          "summary": "All v2 baseline and unstable definitions, declarations, codecs, methods, defaults, patch states, extensible unions, malformed known tags, unknown variants, and meta behavior are exhaustively linked through the conformance report.",
+          "rationaleId": "schema-delegated"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/session-config-options.md",
+      "implementationIds": ["wire.v2", "application.v2"],
+      "testIds": [
+        "matrix.v2.stable",
+        "matrix.v2.unstable",
+        "schema.semantic"
+      ],
+      "headings": [
+        "Initial State",
+        "ConfigOption",
+        "ConfigOptionValue",
+        "Boolean Config Options",
+        "Option Categories",
+        "Option Ordering",
+        "Default Values and Graceful Degradation",
+        "Setting a Config Option",
+        "From the Client",
+        "From the Agent"
+      ],
+      "requirements": [
+        {
+          "id": "v2.config-options.shape",
+          "sections": [
+            "Initial State",
+            "ConfigOption",
+            "ConfigOptionValue",
+            "Boolean Config Options"
+          ],
+          "summary": "Session setup returns ordered select/boolean options whose current and candidate values conform to their exact type.",
+          "rationaleId": "typed-contract"
+        },
+        {
+          "id": "v2.config-options.degrade",
+          "sections": [
+            "Option Categories",
+            "Option Ordering",
+            "Default Values and Graceful Degradation"
+          ],
+          "summary": "Every option has a default; ordering matters, categories are optional UX metadata, and custom/future option types are preserved or safely ignored while the default remains active.",
+          "rationaleId": "typed-contract"
+        },
+        {
+          "id": "v2.config-options.update",
+          "sections": [
+            "Setting a Config Option",
+            "From the Client",
+            "From the Agent"
+          ],
+          "summary": "Client changes return the complete current option list and agent changes notify the new inventory.",
+          "rationaleId": "typed-contract"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/session-delete.md",
+      "implementationIds": ["wire.v2", "application.v2"],
+      "testIds": ["matrix.v2.stable", "matrix.v2.unstable"],
+      "headings": ["Checking Support", "Deleting a Session", "Semantics"],
+      "requirements": [
+        {
+          "id": "v2.session-delete.gating",
+          "sections": ["Checking Support", "Deleting a Session"],
+          "summary": "session/delete remains optional and clients verify its object capability after initialization before calling it.",
+          "rationaleId": "runtime-enforced"
+        },
+        {
+          "id": "v2.session-delete.semantics",
+          "sections": ["Semantics"],
+          "summary": "Deleted sessions disappear from lists and repeated/missing deletes should be idempotent; storage strategy and active/resume behavior remain agent policy.",
+          "rationaleId": "caller-policy"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/session-list.md",
+      "implementationIds": ["wire.v2", "application.v2", "wire.common"],
+      "testIds": [
+        "matrix.v2.stable",
+        "matrix.v2.unstable",
+        "app.absolute-path"
+      ],
+      "headings": [
+        "Listing Sessions",
+        "Pagination",
+        "Updating Session Metadata",
+        "Interaction with Other Session Methods"
+      ],
+      "requirements": [
+        {
+          "id": "v2.session-list.results",
+          "sections": ["Listing Sessions", "Pagination"],
+          "summary": "session-capable agents always support list; filters use absolute cwd, empty results are explicit, cursors are opaque, and missing nextCursor ends pagination.",
+          "rationaleId": "runtime-enforced"
+        },
+        {
+          "id": "v2.session-list.updates",
+          "sections": [
+            "Updating Session Metadata",
+            "Interaction with Other Session Methods"
+          ],
+          "summary": "Session metadata notifications patch only supplied fields and list results stay consistent with create/resume/delete behavior.",
+          "rationaleId": "typed-contract"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/session-setup.md",
+      "implementationIds": [
+        "wire.v2",
+        "wire.common",
+        "application.v2"
+      ],
+      "testIds": [
+        "matrix.v2.stable",
+        "matrix.v2.unstable",
+        "app.absolute-path"
+      ],
+      "headings": [
+        "Creating a Session",
+        "Resuming Sessions",
+        "Closing Active Sessions",
+        "Additional Workspace Roots",
+        "Session ID",
+        "Working Directory",
+        "MCP Servers",
+        "Transport Types",
+        "Stdio Transport",
+        "HTTP Transport",
+        "Checking Transport Support"
+      ],
+      "requirements": [
+        {
+          "id": "v2.session-setup.lifecycle",
+          "sections": [
+            "Creating a Session",
+            "Resuming Sessions",
+            "Closing Active Sessions"
+          ],
+          "summary": "Session-capable agents support create/resume/close; replayFrom null means no history, start replays all messages with IDs before response, and close cancels work before freeing resources.",
+          "rationaleId": "runtime-enforced"
+        },
+        {
+          "id": "v2.session-setup.roots",
+          "sections": [
+            "Additional Workspace Roots",
+            "Session ID",
+            "Working Directory"
+          ],
+          "summary": "cwd and additional roots are absolute, cwd stays the resolution base/effective-root member, and additional roots require their capability.",
+          "rationaleId": "runtime-enforced"
+        },
+        {
+          "id": "v2.session-setup.mcp",
+          "sections": [
+            "MCP Servers",
+            "Transport Types",
+            "Stdio Transport",
+            "HTTP Transport",
+            "Checking Transport Support"
+          ],
+          "summary": "MCP stdio/HTTP transports use required discriminators, custom types begin with underscore, unknown future types are preserved or rejected rather than guessed, and each transport is capability-gated.",
+          "rationaleId": "typed-contract"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/slash-commands.md",
+      "implementationIds": ["wire.v2"],
+      "testIds": [
+        "matrix.v2.stable",
+        "matrix.v2.unstable",
+        "wire.v2.unions"
+      ],
+      "headings": [
+        "Advertising commands",
+        "AvailableCommand",
+        "AvailableCommandInput",
+        "Dynamic updates",
+        "Running commands"
+      ],
+      "requirements": [
+        {
+          "id": "v2.slash-commands.advertise",
+          "sections": [
+            "Advertising commands",
+            "AvailableCommand",
+            "AvailableCommandInput",
+            "Dynamic updates"
+          ],
+          "summary": "Agents replace a typed command inventory; input has a discriminator, underscore types are custom, and unknown future inputs are preserved or displayed generically.",
+          "rationaleId": "typed-contract"
+        },
+        {
+          "id": "v2.slash-commands.run",
+          "sections": ["Running commands"],
+          "summary": "Commands execute as ordinary prompt content and may be combined with other negotiated content blocks.",
+          "rationaleId": "caller-policy"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/tool-calls.md",
+      "implementationIds": ["wire.v2", "wire.common", "application.v2"],
+      "testIds": [
+        "matrix.v2.stable",
+        "matrix.v2.unstable",
+        "wire.v2.unions",
+        "schema.semantic",
+        "app.absolute-path"
+      ],
+      "headings": [
+        "Reporting",
+        "Updating",
+        "Streaming Content",
+        "Requesting Permission",
+        "Permission Options",
+        "Status",
+        "Content",
+        "Regular Content",
+        "Display-only Terminals",
+        "Diffs",
+        "Following the Agent"
+      ],
+      "requirements": [
+        {
+          "id": "v2.tool-calls.upsert",
+          "sections": ["Reporting", "Updating", "Streaming Content"],
+          "summary": "tool_call_update is an ID-keyed upsert: omitted fields remain, null/empty clears, concrete arrays replace, and content chunks append complete items.",
+          "rationaleId": "typed-contract"
+        },
+        {
+          "id": "v2.tool-calls.permission",
+          "sections": ["Requesting Permission", "Permission Options"],
+          "summary": "Permission title is separate from tool state, options are non-empty, command subjects include absolute cwd, cancellation resolves pending requests, and unknown outcomes never count as approval.",
+          "rationaleId": "caller-policy"
+        },
+        {
+          "id": "v2.tool-calls.forward-compatible",
+          "sections": ["Status", "Content", "Regular Content"],
+          "summary": "Custom kinds/status/content begin with underscore, unknown future variants are preserved or safely displayed, and cancelled is a first-class status.",
+          "rationaleId": "typed-contract"
+        },
+        {
+          "id": "v2.tool-calls.terminals",
+          "sections": ["Display-only Terminals"],
+          "summary": "Terminal IDs are session-unique and never reused; updates patch state, snapshots replace bytes, base64 chunks decode independently before append, cwd is absolute, and clients provide an isolated or sanitized display-only fallback.",
+          "rationaleId": "caller-policy"
+        },
+        {
+          "id": "v2.tool-calls.diffs",
+          "sections": ["Diffs", "Following the Agent"],
+          "summary": "Structured changes are authoritative, all paths are absolute, optional git patches match changes without envelope metadata, omitted patches remain valid, and locations preserve optional lines.",
+          "rationaleId": "typed-contract"
+        }
+      ]
+    },
+    {
+      "url": "https://agentclientprotocol.com/protocol/v2/transports.md",
+      "implementationIds": [
+        "jsonrpc",
+        "transport.stdio",
+        "transport.remote",
+        "application.v2"
+      ],
+      "testIds": [
+        "transport.ndjson",
+        "transport.line-limit",
+        "transport.stdio",
+        "jsonrpc.batch",
+        "jsonrpc.invalid",
+        "remote.http",
+        "remote.websocket-v2"
+      ],
+      "headings": [
+        "stdio",
+        "JSON-RPC Batch Messages",
+        "*Streamable HTTP*",
+        "Custom Transports"
+      ],
+      "requirements": [
+        {
+          "id": "v2.transports.stdio",
+          "sections": ["stdio"],
+          "summary": "Messages and batch arrays are UTF-8 compact newline-delimited JSON-RPC with no embedded newline or non-protocol stdout/stdin data; stderr is logging only.",
+          "rationaleId": "runtime-enforced"
+        },
+        {
+          "id": "v2.transports.batch",
+          "sections": ["JSON-RPC Batch Messages"],
+          "summary": "Non-empty batches allow requests/notifications, correlate responses by ID without notification responses or empty arrays, isolate invalid entries, and avoid batching lifecycle-sensitive messages.",
+          "rationaleId": "runtime-enforced"
+        },
+        {
+          "id": "v2.transports.http-custom",
+          "sections": ["*Streamable HTTP*", "Custom Transports"],
+          "summary": "Streamable HTTP and custom transports preserve JSON-RPC framing, batch semantics, and ACP lifecycle/security boundaries.",
+          "rationaleId": "runtime-enforced"
+        }
+      ]
+    }
+  ]
+}

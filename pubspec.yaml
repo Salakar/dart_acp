@@ -1,0 +1,14 @@
+name: dart_acp_sdk_workspace
+publish_to: none
+repository: https://github.com/salakar/dart_acp_sdk
+
+environment:
+  sdk: ^3.11.0
+
+dev_dependencies:
+  analyzer: ^14.1.0
+  lints: ^6.1.0
+  # Melos 7+ removes melos.yaml, which this Dartify workspace retains by
+  # design. Keep the workspace on the latest compatible Melos 6 release.
+  melos: ^6.3.3
+  test: ^1.31.2

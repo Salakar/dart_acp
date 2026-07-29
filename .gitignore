@@ -1,0 +1,12 @@
+.dart_tool/
+.idea/
+.melos_tool/
+*.iml
+pubspec_overrides.yaml
+build/
+coverage/
+phases/
+specs/
+sources/
+.DS_Store
+
