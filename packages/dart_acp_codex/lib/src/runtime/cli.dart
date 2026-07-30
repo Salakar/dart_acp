@@ -6,7 +6,7 @@ import 'options.dart';
 import 'runtime.dart';
 
 /// Package version printed by the executable.
-const String dartAcpCodexVersion = '0.1.0';
+const String dartAcpCodexVersion = '0.1.1';
 
 /// Runs a child command for the `login` and `cli` executable modes.
 typedef CodexCliProcessRunner =

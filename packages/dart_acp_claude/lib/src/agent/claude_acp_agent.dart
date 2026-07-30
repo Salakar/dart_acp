@@ -197,7 +197,7 @@ final class ClaudeAcpAgent {
       agentInfo: unstable.Implementation(
         name: 'dart_acp_claude',
         title: 'Claude',
-        version: '0.1.0',
+        version: '0.1.1',
       ),
       meta: AcpJsonObject.fromObject(<String, Object?>{
         'steering': <String, Object?>{'supported': true},

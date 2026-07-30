@@ -152,6 +152,66 @@ void main() {
       expect(messages.last.parentAgentId, 'parent-agent');
     });
 
+    test('omits shutdown interruption markers between real prompts', () {
+      const interruptedId = '44444444-4444-4444-8444-444444444444';
+      const secondUserId = '55555555-5555-4555-8555-555555555555';
+      const secondAssistantId = '66666666-6666-4666-8666-666666666666';
+      writeJsonl(sessionFile, [
+        ...transcriptEntries(),
+        {
+          'type': 'user',
+          'uuid': interruptedId,
+          'parentUuid': assistantId,
+          'sessionId': sessionId,
+          'interruptedByShutdown': true,
+          'message': {
+            'role': 'user',
+            'content': [
+              {'type': 'text', 'text': '[Request interrupted by user]'},
+            ],
+          },
+        },
+        {
+          'type': 'user',
+          'uuid': secondUserId,
+          'parentUuid': interruptedId,
+          'sessionId': sessionId,
+          'message': {'role': 'user', 'content': 'Second prompt'},
+        },
+        {
+          'type': 'assistant',
+          'uuid': secondAssistantId,
+          'parentUuid': secondUserId,
+          'sessionId': sessionId,
+          'message': {
+            'role': 'assistant',
+            'content': [
+              {'type': 'text', 'text': 'Second response'},
+            ],
+          },
+        },
+      ]);
+
+      final messages = getSessionMessages(
+        sessionId,
+        directory: workspace.path,
+        claudeConfigDirectory: config.path,
+      );
+
+      expect(messages.map((message) => message.uuid), [
+        userId,
+        assistantId,
+        secondUserId,
+        secondAssistantId,
+      ]);
+      expect(
+        messages
+            .where((message) => message.type == 'user')
+            .map((message) => (message.message as Map)['content']),
+        ['First prompt', 'Second prompt'],
+      );
+    });
+
     test('renames, tags, forks, and deletes', () {
       renameSession(
         sessionId,

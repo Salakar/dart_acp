@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- Require `claude_agent_sdk` 0.1.1 so scalar tool-result sidecars cannot
+  terminate a live ACP session and shutdown interruption markers are not
+  replayed as user prompts.
+
 ## 0.1.0
 
 - Add the ready-to-use `ClaudeAcpClient`, typed `ClaudeAcpAgent`, reusable

@@ -312,6 +312,40 @@ void main() {
     expect(user.toolResultMetadata.single.userFeedback, 'Use the package API');
   });
 
+  test(
+    'ignores scalar tool-use result sidecars without rejecting the frame',
+    () {
+      final raw = <String, Object?>{
+        'type': 'user',
+        'uuid': 'user-1',
+        'message': <String, Object?>{
+          'content': <Object?>[
+            <String, Object?>{
+              'type': 'tool_result',
+              'tool_use_id': 'tool-1',
+              'is_error': true,
+              'content': 'Exit code 1',
+            },
+          ],
+        },
+        'tool_use_result': 'Error: Exit code 1',
+      };
+
+      final user = codec.decode(raw)! as UserMessage;
+      final structured =
+          codec.decode(<String, Object?>{
+                ...raw,
+                'tool_use_result': <String, Object?>{'stdout': 'ok'},
+              })!
+              as UserMessage;
+
+      expect(user.toolUseResult, isNull);
+      expect(user.blocks.single, isA<ToolResultBlock>());
+      expect((user.blocks.single as ToolResultBlock).content, 'Exit code 1');
+      expect(structured.toolUseResult, containsPair('stdout', 'ok'));
+    },
+  );
+
   test('decodes stream and rate-limit events', () {
     final stream = codec.decode({
       'type': 'stream_event',

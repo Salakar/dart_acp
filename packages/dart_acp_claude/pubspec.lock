@@ -55,7 +55,7 @@ packages:
       path: "../claude_agent_sdk"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.1.1"
   cli_config:
     dependency: transitive
     description:

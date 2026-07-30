@@ -8,7 +8,7 @@ import '../mcp.dart';
 import '../options.dart';
 
 /// Version reported to Claude Code by this Dart package.
-const String packageVersion = '0.1.0';
+const String packageVersion = '0.1.1';
 
 /// Oldest Claude Code release supported by this package.
 const String minimumCliVersion = '2.0.0';

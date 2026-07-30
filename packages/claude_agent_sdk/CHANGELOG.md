@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- Tolerate newer Claude Code user frames whose top-level `tool_use_result`
+  sidecar is a scalar while preserving the typed JSON-object API.
+- Exclude shutdown-generated interruption markers from session history replay.
+
 ## 0.1.0
 
 - Initial release with one-shot and stateful agent sessions.

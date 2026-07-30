@@ -76,7 +76,12 @@ final class MessageCodec {
     final content = message['content'];
     final uuid = optionalString(data, 'uuid', 'user');
     final parent = optionalString(data, 'parent_tool_use_id', 'user');
-    final toolResult = optionalMap(data, 'tool_use_result', 'user');
+    final rawToolResult = data['tool_use_result'];
+    // Claude Code also emits this sidecar as a scalar for failed tools. Keep
+    // the public JsonMap shape while the envelope preserves the complete frame.
+    final toolResult = rawToolResult is Map<Object?, Object?>
+        ? asJsonMap(rawToolResult, 'user.tool_use_result')
+        : null;
     final origin = optionalMap(data, 'origin', 'user');
     final timestamp = _timestamp(data['timestamp'], 'user.timestamp');
     final toolResultMetadata = _toolResultMetadata(data['tool_result_meta']);

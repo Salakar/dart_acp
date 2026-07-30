@@ -949,6 +949,7 @@ List<SessionMessage> _messagesFromEntries(
                 entry['type'] == 'assistant' ||
                 (includeSystemMessages && entry['type'] == 'system')) &&
             entry['isMeta'] != true &&
+            entry['interruptedByShutdown'] != true &&
             (allowSidechains || entry['isSidechain'] != true) &&
             (allowSidechains || entry['teamName'] == null),
       )

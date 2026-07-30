@@ -53,7 +53,7 @@ final class CodexAgent {
       implementation: Implementation(
         name: 'dart_acp_codex',
         title: 'Codex',
-        version: '0.1.0',
+        version: '0.1.1',
       ),
       capabilities: AgentCapabilities(
         loadSession: true,
@@ -208,7 +208,7 @@ final class CodexAgent {
         'clientInfo': <String, Object?>{
           'name': 'dart_acp_codex',
           'title': 'Dart ACP Codex',
-          'version': '0.1.0',
+          'version': '0.1.1',
         },
         'capabilities': <String, Object?>{
           'experimentalApi': true,
@@ -577,7 +577,7 @@ final class CodexAgent {
         'approvalPolicy': CodexAgentMode.workspaceWrite.approvalPolicy,
         'sandbox': 'workspace-write',
         'config': _sessionConfig(mcpServers),
-        'sessionStartSource': 'appServer',
+        'threadSource': 'appServer',
       }),
     );
     try {

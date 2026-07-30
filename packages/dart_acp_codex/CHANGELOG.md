@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+- Fixed Codex app-server thread creation to classify sessions with
+  `threadSource` instead of sending the invalid `sessionStartSource` variant.
+
 ## 0.1.0
 
 - Added the typed `CodexAcpClient`, `CodexAgent`, `CodexRuntime`, and

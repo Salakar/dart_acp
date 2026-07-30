@@ -970,10 +970,10 @@ void main() {
       expect(modalities['second-model'], <AcpModelInputModality>{
         AcpModelInputModality.text,
       });
-      expect(
-        harness.backend.lastCall('thread/start').params['model'],
-        'fallback-model',
-      );
+      final startParams = harness.backend.lastCall('thread/start').params;
+      expect(startParams['model'], 'fallback-model');
+      expect(startParams['threadSource'], 'appServer');
+      expect(startParams.containsKey('sessionStartSource'), isFalse);
     },
   );
 
