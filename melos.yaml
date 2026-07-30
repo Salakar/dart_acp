@@ -12,16 +12,16 @@ scripts:
     run: dart run melos exec --depends-on=build_runner -- "dart run tool/schema/generate.dart && dart run build_runner build && dart format lib/src/protocol/v1/generated lib/src/protocol/v2/generated"
     description: Generate and format schema-derived Dart and json_serializable sources.
   schema:check:
-    run: dart run melos exec -- "dart run tool/schema/generate.dart --check"
+    run: dart run melos exec --file-exists=tool/schema/generate.dart -- "dart run tool/schema/generate.dart --check"
     description: Verify committed sources match the pinned offline schemas.
   schema:sync:
-    run: dart run melos exec -- "dart run tool/schema/sync.dart --update"
+    run: dart run melos exec --file-exists=tool/schema/sync.dart -- "dart run tool/schema/sync.dart --update"
     description: Pull live official/SDK schemas, verify drift, and regenerate.
   schema:sync:check:
-    run: dart run melos exec -- "dart run tool/schema/sync.dart --check"
+    run: dart run melos exec --file-exists=tool/schema/sync.dart -- "dart run tool/schema/sync.dart --check"
     description: Check whether pinned schemas still match both upstream main branches.
   spec:check:
-    run: dart run melos exec -- "dart run tool/spec/check.dart"
+    run: dart run melos exec --file-exists=tool/spec/check.dart -- "dart run tool/spec/check.dart"
     description: Verify the pinned live-spec requirement matrix offline.
   reference:check:
     run: dart run tool/check_reference_test_matrix.dart
@@ -36,13 +36,13 @@ scripts:
     run: dart run melos exec -- "dart test"
     description: Run package tests.
   test:web:
-    run: dart run melos exec -- "dart run tool/run_chrome_tests.dart"
+    run: dart run melos exec --file-exists=tool/run_chrome_tests.dart -- "dart run tool/run_chrome_tests.dart"
     description: Run the complete dart2js suite in Chrome with its loopback helper.
   coverage:vm:
     run: dart run melos exec -- "dart test --coverage-path=coverage/vm.info --branch-coverage"
     description: Run VM tests and emit LCOV coverage.
   coverage:web:
-    run: dart run melos exec -- "dart run tool/run_chrome_tests.dart --coverage-path=coverage/web.info --branch-coverage"
+    run: dart run melos exec --file-exists=tool/run_chrome_tests.dart -- "dart run tool/run_chrome_tests.dart --coverage-path=coverage/web.info --branch-coverage"
     description: Run the managed Chrome suite and emit browser LCOV coverage.
   coverage:merge:
     run: dart run tool/merge_coverage.dart --output=packages/dart_acp_sdk/coverage/lcov.info packages/dart_acp_sdk/coverage/vm.info packages/dart_acp_sdk/coverage/web.info
@@ -54,10 +54,10 @@ scripts:
     run: dart run melos exec --no-private -- "dart pub publish --dry-run"
     description: Validate publishable packages without publishing.
   examples:smoke:
-    run: dart run melos exec -- "dart run tool/smoke_examples.dart"
+    run: dart run melos exec --file-exists=tool/smoke_examples.dart -- "dart run tool/smoke_examples.dart"
     description: Run every executable example with deterministic smoke-sized work.
   benchmarks:smoke:
-    run: dart run melos exec -- "dart run tool/smoke_benchmarks.dart"
+    run: dart run melos exec --file-exists=tool/smoke_benchmarks.dart -- "dart run tool/smoke_benchmarks.dart"
     description: Run one smoke-sized iteration of every benchmark.
   tool:test:
     run: dart test test

@@ -1,6 +1,6 @@
 name: dart_acp_sdk_workspace
 publish_to: none
-repository: https://github.com/salakar/dart_acp_sdk
+repository: https://github.com/Salakar/dart_acp
 
 environment:
   sdk: ^3.11.0

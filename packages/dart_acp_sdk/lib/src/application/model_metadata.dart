@@ -18,9 +18,6 @@ final class AcpModelInputModality {
   /// Audio input.
   static const audio = AcpModelInputModality('audio');
 
-  /// Embedded resource/context input.
-  static const embeddedContext = AcpModelInputModality('embeddedContext');
-
   /// Provider-neutral wire identifier.
   final String id;
 
@@ -35,7 +32,7 @@ final class AcpModelInputModality {
   String toString() => 'AcpModelInputModality($id)';
 }
 
-/// Builds standard SDK metadata for a model configuration option.
+/// Builds provider-neutral SDK metadata for a model configuration option.
 ///
 /// The encoded shape deliberately mirrors the provider's generic
 /// `inputModalities` inventory rather than translating it into a

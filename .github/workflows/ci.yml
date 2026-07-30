@@ -88,7 +88,6 @@ jobs:
       - name: Benchmark smoke
         if: matrix.sdk == 'stable'
         run: dart run melos run benchmarks:smoke
-      - name: Publish dry run
+      - name: Publish dry run for all packages
         if: matrix.sdk == 'stable'
-        working-directory: packages/dart_acp_sdk
-        run: dart pub publish --dry-run
+        run: dart run melos run publish:dry-run

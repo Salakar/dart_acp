@@ -27,7 +27,7 @@ void main() {
     });
   });
 
-  test('malformed model modality metadata fails closed', () {
+  test('malformed model modality metadata is treated as unpublished', () {
     final option = SessionConfigSelectOption(
       value: SessionConfigValueId('text'),
       name: 'Text',
@@ -49,5 +49,22 @@ void main() {
     );
 
     expect(option.modelInputModalities, isEmpty);
+  });
+
+  test('generic metadata is preserved and input modalities stay canonical', () {
+    final meta = acpModelOptionMeta(
+      inputModalities: const <AcpModelInputModality>[
+        AcpModelInputModality.text,
+      ],
+      additionalMetadata: AcpJsonObject.fromObject(<String, Object?>{
+        'provider.example/quality': 'fast',
+        'inputModalities': <Object?>['image'],
+      }),
+    );
+
+    expect(meta.toObject(), <String, Object?>{
+      'provider.example/quality': 'fast',
+      'inputModalities': <Object?>['text'],
+    });
   });
 }

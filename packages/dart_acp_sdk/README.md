@@ -29,7 +29,7 @@ The package requires Dart 3.11 or newer.
 ## Quick start
 
 This is the same code exercised by
-[`example/quick_start.dart`](https://github.com/salakar/dart_acp_sdk/blob/main/packages/dart_acp_sdk/example/quick_start.dart)
+[`example/quick_start.dart`](https://github.com/Salakar/dart_acp/blob/main/packages/dart_acp_sdk/example/quick_start.dart)
 and its automated test:
 
 ```dart
@@ -193,7 +193,7 @@ application feature gate, preventing an accidental import from enabling them.
 Remote transports expose wire streams. Wrap one with `acpApplicationStream`
 before passing it to `AcpAgentApp.connect` or `AcpClientApp.connect`. Complete
 HTTP/SSE and WebSocket usage is in the
-[examples](https://github.com/salakar/dart_acp_sdk/blob/main/packages/dart_acp_sdk/example/README.md).
+[examples](https://github.com/Salakar/dart_acp/blob/main/packages/dart_acp_sdk/example/README.md).
 
 All public libraries are compiled for the web during verification. Native-only
 implementations are selected through conditional imports, so importing a
@@ -210,7 +210,7 @@ The remote server libraries provide routing primitives, not identity or
 privilege policy. Hosts remain responsible for TLS, authentication,
 authorization, origin/CORS policy, rate limiting, quotas, and auditing. Read
 the
-[security guidance](https://github.com/salakar/dart_acp_sdk/blob/main/packages/dart_acp_sdk/SECURITY.md)
+[security guidance](https://github.com/Salakar/dart_acp/blob/main/packages/dart_acp_sdk/SECURITY.md)
 before exposing a listener or registering
 filesystem, terminal, process, or URL handlers.
 
@@ -218,23 +218,23 @@ filesystem, terminal, process, or URL handlers.
 
 The examples are executable and included in the smoke suite:
 
-- [`quick_start.dart`](https://github.com/salakar/dart_acp_sdk/blob/main/packages/dart_acp_sdk/example/quick_start.dart):
+- [`quick_start.dart`](https://github.com/Salakar/dart_acp/blob/main/packages/dart_acp_sdk/example/quick_start.dart):
   smallest in-process v1 flow.
-- [`main.dart`](https://github.com/salakar/dart_acp_sdk/blob/main/packages/dart_acp_sdk/example/main.dart):
+- [`main.dart`](https://github.com/Salakar/dart_acp/blob/main/packages/dart_acp_sdk/example/main.dart):
   sessions, streamed updates, permissions,
   cancellation, failure, usage, and close.
-- [`stdio_agent.dart`](https://github.com/salakar/dart_acp_sdk/blob/main/packages/dart_acp_sdk/example/stdio_agent.dart)
+- [`stdio_agent.dart`](https://github.com/Salakar/dart_acp/blob/main/packages/dart_acp_sdk/example/stdio_agent.dart)
   and
-  [`stdio_client.dart`](https://github.com/salakar/dart_acp_sdk/blob/main/packages/dart_acp_sdk/example/stdio_client.dart):
+  [`stdio_client.dart`](https://github.com/Salakar/dart_acp/blob/main/packages/dart_acp_sdk/example/stdio_client.dart):
   a child agent over NDJSON
   stdio.
-- [`http_server.dart`](https://github.com/salakar/dart_acp_sdk/blob/main/packages/dart_acp_sdk/example/http_server.dart),
-  [`http_client.dart`](https://github.com/salakar/dart_acp_sdk/blob/main/packages/dart_acp_sdk/example/http_client.dart),
+- [`http_server.dart`](https://github.com/Salakar/dart_acp/blob/main/packages/dart_acp_sdk/example/http_server.dart),
+  [`http_client.dart`](https://github.com/Salakar/dart_acp/blob/main/packages/dart_acp_sdk/example/http_client.dart),
   and
-  [`web_socket_client.dart`](https://github.com/salakar/dart_acp_sdk/blob/main/packages/dart_acp_sdk/example/web_socket_client.dart):
+  [`web_socket_client.dart`](https://github.com/Salakar/dart_acp/blob/main/packages/dart_acp_sdk/example/web_socket_client.dart):
   loopback-safe
   remote flows.
-- [`dual_version_agent.dart`](https://github.com/salakar/dart_acp_sdk/blob/main/packages/dart_acp_sdk/example/dual_version_agent.dart):
+- [`dual_version_agent.dart`](https://github.com/Salakar/dart_acp/blob/main/packages/dart_acp_sdk/example/dual_version_agent.dart):
   one listener
   negotiating stable v1 or draft v2.
 
@@ -281,9 +281,9 @@ Measured on 2026-07-29 with Dart 3.12.2 on arm64 macOS:
 ## Contributing and license
 
 See the
-[repository contribution guide](https://github.com/salakar/dart_acp_sdk/blob/main/CONTRIBUTING.md).
+[repository contribution guide](https://github.com/Salakar/dart_acp/blob/main/CONTRIBUTING.md).
 Release history is recorded in the
-[changelog](https://github.com/salakar/dart_acp_sdk/blob/main/packages/dart_acp_sdk/CHANGELOG.md).
+[changelog](https://github.com/Salakar/dart_acp/blob/main/packages/dart_acp_sdk/CHANGELOG.md).
 
 Licensed under the
-[Apache License 2.0](https://github.com/salakar/dart_acp_sdk/blob/main/packages/dart_acp_sdk/LICENSE).
+[Apache License 2.0](https://github.com/Salakar/dart_acp/blob/main/packages/dart_acp_sdk/LICENSE).
