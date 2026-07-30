@@ -16,6 +16,11 @@ client, embed `ClaudeAcpAgent` behind another transport, or run the packaged
 stdio agent. The package requires Dart 3.10 or newer and an installed,
 authenticated Claude Code CLI for live requests.
 
+Claude Code goals use the provider-neutral ACP goal extension. The adapter
+advertises update and clear, forwards those operations through
+`_session/goal_control`, and publishes live state through
+`session_info_update._meta.goal`.
+
 ## Install
 
 ```console

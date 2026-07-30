@@ -121,7 +121,10 @@ Two typed underscore extensions are exported:
 
 - `_session/steering` queues additional text or image input. It reports whether
   input joined the active turn, started a new turn, or failed.
-- `_codex/session/goal_control` pauses or clears the current goal.
+- `_session/goal_control` creates or edits, pauses, resumes, or clears the
+  current goal. Goal-control support is advertised through
+  `agentCapabilities._meta.goalControl`, and sessions publish the current goal
+  through the shared `session_info_update._meta.goal` snapshot.
 
 No non-underscore compatibility extensions are registered.
 

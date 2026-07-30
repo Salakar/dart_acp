@@ -172,6 +172,23 @@ final class FakeClaudeTransport implements Transport {
     });
   }
 
+  /// Emits Claude Code's current provider-managed goal.
+  void emitActiveGoal(String? condition) {
+    emit(<String, Object?>{
+      'type': 'active_goal',
+      'value': condition == null
+          ? null
+          : <String, Object?>{
+              'condition': condition,
+              'iterations': 0,
+              'set_at': 1,
+              'tokens_at_start': 0,
+            },
+      'uuid': 'active-goal-uuid',
+      'session_id': 'default',
+    });
+  }
+
   @override
   Future<void> endInput() => close();
 

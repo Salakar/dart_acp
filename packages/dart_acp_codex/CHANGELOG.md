@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+- Implement the shared ACP goal-control extension, including objective updates,
+  pause, resume, and clear, and publish goal snapshots when sessions open or
+  change.
+
 ## 0.1.1
 
 - Fixed Codex app-server thread creation to classify sessions with

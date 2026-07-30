@@ -68,7 +68,26 @@ void main() {
           final transport = FakeClaudeTransport();
           transport.onWrite = (frame) {
             transport.autoRespond(frame);
-            if (frame['type'] == 'user') transport.emitSuccessfulTurn();
+            if (frame['type'] == 'user') {
+              final message = frame['message'];
+              final content = message is Map<Object?, Object?>
+                  ? message['content']
+                  : null;
+              final first = content is List<Object?> && content.isNotEmpty
+                  ? content.first
+                  : null;
+              final text = first is Map<Object?, Object?>
+                  ? first['text']
+                  : null;
+              if (text is String && text.startsWith('/goal ')) {
+                transport.emitActiveGoal(
+                  text == '/goal clear'
+                      ? null
+                      : text.substring('/goal '.length),
+                );
+              }
+              transport.emitSuccessfulTurn();
+            }
           };
           transports.add(transport);
           return claude.ClaudeAgentClient(
@@ -156,6 +175,12 @@ void main() {
       expect(created.sessionId.value, '11111111-2222-4333-8444-555555555555');
       expect(created.modes?.currentModeId.value, 'default');
       expect(created.configOptions, isNotEmpty);
+      expect(
+        pair.client.lifecycle.peerCapabilities.supports(
+          'agentCapabilities._meta.goalControl',
+        ),
+        isTrue,
+      );
       expect(capturedOptions.single.addDirectories, <String>[
         '/sdk-extra',
         '/extra',
@@ -215,6 +240,14 @@ void main() {
           (value) => value.update.discriminator == 'available_commands_update',
         ),
         isTrue,
+      );
+      expect(
+        updates
+            .where(
+              (value) => value.update.discriminator == 'session_info_update',
+            )
+            .map((value) => value.update.toJson().toString()),
+        contains(contains('goal: null')),
       );
 
       final beforeModeChange = updates.length;
@@ -487,6 +520,49 @@ void main() {
             .map((value) => value.update.toJson().toString())
             .join(),
         contains('background output'),
+      );
+
+      await pair.client.agent.request(
+        acpSessionGoalControlMethod,
+        AcpGoalControlRequest(
+          sessionId: created.sessionId,
+          action: AcpGoalControlAction.update,
+          objective: 'Ship Claude goals',
+        ),
+      );
+      expect(
+        updates
+            .where(
+              (value) => value.update.discriminator == 'session_info_update',
+            )
+            .map((value) => value.update.toJson().toString()),
+        contains(contains('Ship Claude goals')),
+      );
+      await expectLater(
+        pair.client.agent.request(
+          acpSessionGoalControlMethod,
+          AcpGoalControlRequest(
+            sessionId: created.sessionId,
+            action: AcpGoalControlAction.pause,
+          ),
+        ),
+        throwsA(isA<JsonRpcRequestException>()),
+      );
+      await pair.client.agent.request(
+        acpSessionGoalControlMethod,
+        AcpGoalControlRequest(
+          sessionId: created.sessionId,
+          action: AcpGoalControlAction.clear,
+        ),
+      );
+      expect(
+        transports.single.written
+            .where((frame) => frame['type'] == 'user')
+            .map((frame) => frame.toString()),
+        containsAll(<Matcher>[
+          contains('/goal Ship Claude goals'),
+          contains('/goal clear'),
+        ]),
       );
 
       await pair.client.agent.setSessionMode(

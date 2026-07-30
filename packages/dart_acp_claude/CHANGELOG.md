@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2
+
+- Implement the shared ACP goal contract for Claude Code `/goal`, including
+  update/clear controls and live `active_goal` session snapshots.
+
 ## 0.1.1
 
 - Require `claude_agent_sdk` 0.1.1 so scalar tool-result sidecars cannot

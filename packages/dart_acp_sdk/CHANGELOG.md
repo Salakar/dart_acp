@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+- Add a provider-neutral goal-control extension with action-level capability
+  metadata and shared session goal snapshots.
+
 ## 0.1.0
 
 - Add schema-generated stable ACP v1 models and method descriptors.

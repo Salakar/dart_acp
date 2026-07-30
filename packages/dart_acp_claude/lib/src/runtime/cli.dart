@@ -7,7 +7,7 @@ import '../configuration/agent_options.dart';
 import 'contracts.dart';
 
 /// Package version printed by the executable.
-const String dartAcpClaudeVersion = '0.1.1';
+const String dartAcpClaudeVersion = '0.1.2';
 
 /// Runs a delegated native Claude command.
 typedef ClaudeCliProcessRunner =

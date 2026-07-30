@@ -52,9 +52,10 @@ packages:
   claude_agent_sdk:
     dependency: "direct main"
     description:
-      path: "../claude_agent_sdk"
-      relative: true
-    source: path
+      name: claude_agent_sdk
+      sha256: f670ebc09ee9807502d54406b640e12995d308630d1bc63b065f8fb578a3215f
+      url: "https://pub.dev"
+    source: hosted
     version: "0.1.1"
   cli_config:
     dependency: transitive
@@ -102,7 +103,7 @@ packages:
       path: "../dart_acp_sdk"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.1.1"
   file:
     dependency: transitive
     description:

@@ -1,6 +1,6 @@
 name: dart_acp_codex
 description: A typed ACP client and adapter for local Codex processes.
-version: 0.1.1
+version: 0.1.2
 repository: https://github.com/Salakar/dart_acp
 issue_tracker: https://github.com/Salakar/dart_acp/issues
 homepage: https://github.com/Salakar/dart_acp/tree/main/packages/dart_acp_codex
@@ -21,7 +21,7 @@ executables:
   dart_acp_codex: dart_acp_codex
 
 dependencies:
-  dart_acp_sdk: ^0.1.0
+  dart_acp_sdk: ^0.1.1
 
 dev_dependencies:
   benchmark_harness: ^2.4.0

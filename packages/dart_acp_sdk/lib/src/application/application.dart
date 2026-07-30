@@ -28,6 +28,7 @@ part 'capabilities.dart';
 part 'client_app.dart';
 part 'connection.dart';
 part 'context.dart';
+part 'goal.dart';
 part 'handlers.dart';
 part 'model_metadata.dart';
 part 'session.dart';

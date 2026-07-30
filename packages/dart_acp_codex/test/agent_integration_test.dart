@@ -146,6 +146,12 @@ void main() {
     expect(harness.backend.count('initialize'), 1);
     expect(harness.backend.count('model/list'), 1);
     expect(
+      harness.pair.client.lifecycle.peerCapabilities.supports(
+        'agentCapabilities._meta.goalControl.supported',
+      ),
+      isTrue,
+    );
+    expect(
       harness.backend.calls.where(
         (call) => call.method == 'initialized' && call.isNotification,
       ),
@@ -323,6 +329,16 @@ void main() {
             update.update.discriminator == 'available_commands_update',
       ),
       isTrue,
+    );
+    expect(
+      harness.updates
+          .where(
+            (update) =>
+                update.sessionId == sessionId &&
+                update.update.discriminator == 'session_info_update',
+          )
+          .map((update) => update.update.toJson().toString()),
+      contains(contains('Ship it')),
     );
 
     await harness.pair.client.agent.setSessionMode(
@@ -651,20 +667,47 @@ void main() {
     expect(injected, CodexSteeringResponse.injected);
 
     await harness.pair.client.agent.request(
-      codexGoalControlMethod,
-      CodexGoalControlRequest(
+      acpSessionGoalControlMethod,
+      AcpGoalControlRequest(
         sessionId: sessionId,
-        action: CodexGoalAction.pause,
+        action: AcpGoalControlAction.update,
+        objective: 'Ship goal controls',
       ),
     );
     await harness.pair.client.agent.request(
-      codexGoalControlMethod,
-      CodexGoalControlRequest(
+      acpSessionGoalControlMethod,
+      AcpGoalControlRequest(
         sessionId: sessionId,
-        action: CodexGoalAction.clear,
+        action: AcpGoalControlAction.pause,
       ),
     );
-    expect(harness.backend.count('thread/goal/set'), 1);
+    await harness.pair.client.agent.request(
+      acpSessionGoalControlMethod,
+      AcpGoalControlRequest(
+        sessionId: sessionId,
+        action: AcpGoalControlAction.resume,
+      ),
+    );
+    await harness.pair.client.agent.request(
+      acpSessionGoalControlMethod,
+      AcpGoalControlRequest(
+        sessionId: sessionId,
+        action: AcpGoalControlAction.clear,
+      ),
+    );
+    expect(harness.backend.count('thread/goal/set'), 3);
+    final goalCalls = harness.backend.calls
+        .where((call) => call.method == 'thread/goal/set')
+        .map((call) => call.params.toJson())
+        .toList(growable: false);
+    expect(goalCalls, <Map<Object?, Object?>>[
+      <Object?, Object?>{
+        'threadId': sessionId.value,
+        'objective': 'Ship goal controls',
+      },
+      <Object?, Object?>{'threadId': sessionId.value, 'status': 'paused'},
+      <Object?, Object?>{'threadId': sessionId.value, 'status': 'active'},
+    ]);
     expect(harness.backend.count('thread/goal/clear'), 1);
 
     final unknown = await harness.backend.ask(

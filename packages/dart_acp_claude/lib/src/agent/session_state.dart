@@ -77,6 +77,9 @@ final class ClaudeAcpSession {
   /// Last title sent to the ACP client.
   String? title;
 
+  /// Last provider-managed goal reported by Claude Code.
+  AcpGoalSnapshot? goal;
+
   /// Incremental message projection state for the active prompt.
   final ClaudeMessageProjectionState messageProjection =
       ClaudeMessageProjectionState();

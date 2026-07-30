@@ -20,7 +20,6 @@ import '../config/modes.dart';
 import '../config/providers.dart';
 import '../runtime/diagnostics.dart';
 import '../runtime/options.dart';
-import '../session/goal.dart';
 import '../session/state.dart';
 import '../session/steering_queue.dart';
 import 'extensions.dart';
@@ -53,7 +52,7 @@ final class CodexAgent {
       implementation: Implementation(
         name: 'dart_acp_codex',
         title: 'Codex',
-        version: '0.1.1',
+        version: '0.1.2',
       ),
       capabilities: AgentCapabilities(
         loadSession: true,
@@ -73,6 +72,9 @@ final class CodexAgent {
         auth: AgentAuthCapabilities(logout: LogoutCapabilities()),
         meta: AcpJsonObject.fromObject(<String, Object?>{
           'steering': <String, Object?>{'supported': true},
+          'goalControl': AcpGoalControlCapabilities(
+            AcpGoalControlAction.values,
+          ).toJson(),
         }),
       ),
       authMethods: _authMethods(this.options),
@@ -101,7 +103,7 @@ final class CodexAgent {
         .onRequest(unstable.providersSetMethod, _setProvider)
         .onRequest(unstable.providersDisableMethod, _disableProvider)
         .onRequest(codexSteeringMethod, _steerExtension)
-        .onRequest(codexGoalControlMethod, _goalControlExtension);
+        .onRequest(acpSessionGoalControlMethod, _goalControlExtension);
   }
 
   final CodexBackend _backend;
@@ -208,7 +210,7 @@ final class CodexAgent {
         'clientInfo': <String, Object?>{
           'name': 'dart_acp_codex',
           'title': 'Dart ACP Codex',
-          'version': '0.1.1',
+          'version': '0.1.2',
         },
         'capabilities': <String, Object?>{
           'experimentalApi': true,
@@ -581,12 +583,14 @@ final class CodexAgent {
       }),
     );
     try {
-      return _installSession(
+      final state = _installSession(
         response: response,
         cwd: cwd,
         additionalDirectories: additionalDirectories,
         fallbackId: requestedId,
       );
+      await _refreshGoal(state);
+      return state;
     } on Object {
       await _unsubscribeResponseThread(response);
       rethrow;
@@ -610,15 +614,14 @@ final class CodexAgent {
       }),
     );
     try {
-      return (
-        _installSession(
-          response: response,
-          cwd: cwd,
-          additionalDirectories: additionalDirectories,
-          fallbackId: requestedId,
-        ),
-        response,
+      final state = _installSession(
+        response: response,
+        cwd: cwd,
+        additionalDirectories: additionalDirectories,
+        fallbackId: requestedId,
       );
+      await _refreshGoal(state);
+      return (state, response);
     } on Object {
       await _unsubscribeResponseThread(response);
       rethrow;
@@ -1082,13 +1085,32 @@ final class CodexAgent {
     }
   }
 
-  Future<CodexGoalControlResponse> _goalControlExtension(
-    AcpAgentRequestContext<CodexGoalControlRequest> context,
+  Future<AcpNoResult> _goalControlExtension(
+    AcpAgentRequestContext<AcpGoalControlRequest> context,
   ) async {
     final request = context.params;
     final state = _requireSession(request.sessionId);
     switch (request.action) {
-      case CodexGoalAction.pause:
+      case AcpGoalControlAction.update:
+        final objective = request.objective?.trim();
+        if (objective == null || objective.isEmpty) {
+          throw JsonRpcRequestException.invalidParams(
+            data: <String, Object?>{
+              'message': 'Updating a goal requires a non-empty objective.',
+            },
+          );
+        }
+        await _backend.request(
+          'thread/goal/set',
+          params: CodexJsonObject.from(<String, Object?>{
+            'threadId': state.sessionId.value,
+            'objective': objective,
+          }),
+        );
+        state
+          ..goalObjective = objective
+          ..goalStatus = 'active';
+      case AcpGoalControlAction.pause:
         await _backend.request(
           'thread/goal/set',
           params: CodexJsonObject.from(<String, Object?>{
@@ -1096,15 +1118,47 @@ final class CodexAgent {
             'status': 'paused',
           }),
         );
-      case CodexGoalAction.clear:
+        state.goalStatus = 'paused';
+      case AcpGoalControlAction.resume:
+        await _backend.request(
+          'thread/goal/set',
+          params: CodexJsonObject.from(<String, Object?>{
+            'threadId': state.sessionId.value,
+            'status': 'active',
+          }),
+        );
+        state.goalStatus = 'active';
+      case AcpGoalControlAction.clear:
         await _backend.request(
           'thread/goal/clear',
           params: CodexJsonObject.from(<String, Object?>{
             'threadId': state.sessionId.value,
           }),
         );
+        state
+          ..goalObjective = null
+          ..goalStatus = null;
     }
-    return const CodexGoalControlResponse();
+    await _sendGoalUpdate(context.client, state);
+    return const AcpNoResult();
+  }
+
+  Future<void> _refreshGoal(CodexSessionState state) async {
+    try {
+      final response = await _backend.request(
+        'thread/goal/get',
+        params: CodexJsonObject.from(<String, Object?>{
+          'threadId': state.sessionId.value,
+        }),
+      );
+      final goal = response.optionalObject('goal');
+      state
+        ..goalObjective = goal?.optionalString('objective')
+        ..goalStatus = goal?.optionalString('status');
+    } on Object {
+      // Goal support is an app-server extension. Older servers can still run
+      // normal ACP sessions; they simply begin without an observable goal.
+    }
   }
 
   Future<void> _interrupt(CodexSessionState state, CodexTurnId turn) async {
@@ -1183,6 +1237,18 @@ final class CodexAgent {
       state
         ..goalObjective = null
         ..goalStatus = null;
+    }
+    if (notification.method == 'thread/goal/updated' ||
+        notification.method == 'thread/goal/cleared') {
+      final client = _client;
+      if (client != null) {
+        final generation = state.generation;
+        state.enqueueNotification(() async {
+          if (!state.isClosed && state.generation == generation) {
+            await _sendGoalUpdate(client, state);
+          }
+        });
+      }
     }
     if (_elicitations[state.sessionId.value] case final bridge?) {
       unawaited(bridge.observe(notification));
@@ -1323,12 +1389,39 @@ final class CodexAgent {
               update: _commands.availableCommands(),
             ),
           );
+          await _sendGoalUpdate(client, state);
         } on AcpConnectionStateException {
           // The connection can close between the readiness check and send.
         }
       }),
     );
   }
+
+  Future<void> _sendGoalUpdate(
+    AcpAgentContext client,
+    CodexSessionState state,
+  ) => client.updateSession(
+    SessionNotification(
+      sessionId: state.sessionId,
+      update: SessionUpdate.fromJson(<String, Object?>{
+        'sessionUpdate': 'session_info_update',
+        '_meta': <String, Object?>{
+          'goal': switch (state.goalObjective) {
+            final objective? => AcpGoalSnapshot(
+              objective: objective,
+              status: switch (state.goalStatus) {
+                'paused' => AcpGoalStatus.paused,
+                'completed' || 'complete' => AcpGoalStatus.completed,
+                'cancelled' || 'canceled' => AcpGoalStatus.cancelled,
+                _ => AcpGoalStatus.active,
+              },
+            ).toJson(),
+            null => null,
+          },
+        },
+      }),
+    ),
+  );
 
   SessionModeState _modeState(CodexSessionState state) {
     return SessionModeState(

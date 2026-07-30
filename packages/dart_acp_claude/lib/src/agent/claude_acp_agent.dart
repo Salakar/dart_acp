@@ -117,7 +117,8 @@ final class ClaudeAcpAgent {
         .onRequest(unstable.providersListMethod, _listProviders)
         .onRequest(unstable.providersSetMethod, _setProvider)
         .onRequest(unstable.providersDisableMethod, _disableProvider)
-        .onRequest(claudeSteeringMethod, _steer);
+        .onRequest(claudeSteeringMethod, _steer)
+        .onRequest(acpSessionGoalControlMethod, _goalControl);
   }
 
   /// Adapter defaults.
@@ -184,6 +185,12 @@ final class ClaudeAcpAgent {
         'auth': <String, Object?>{'logout': <String, Object?>{}},
         'providers': <String, Object?>{},
         '_meta': <String, Object?>{
+          'goalControl': AcpGoalControlCapabilities(
+            const <AcpGoalControlAction>[
+              AcpGoalControlAction.update,
+              AcpGoalControlAction.clear,
+            ],
+          ).toJson(),
           'claudeCode': <String, Object?>{
             'promptQueueing': true,
             'maximumPendingPrompts': options.maximumQueuedPrompts,
@@ -197,7 +204,7 @@ final class ClaudeAcpAgent {
       agentInfo: unstable.Implementation(
         name: 'dart_acp_claude',
         title: 'Claude',
-        version: '0.1.1',
+        version: '0.1.2',
       ),
       meta: AcpJsonObject.fromObject(<String, Object?>{
         'steering': <String, Object?>{'supported': true},
@@ -688,6 +695,7 @@ final class ClaudeAcpAgent {
     }
     _sessions[id] = session;
     await _sendCommands(peer, session, initialization.commands);
+    await _sendGoalUpdate(peer, session);
     session.consumer = _consumeSession(peer, session);
     return session;
   }
@@ -1158,6 +1166,37 @@ final class ClaudeAcpAgent {
     });
   }
 
+  Future<AcpNoResult> _goalControl(
+    AcpAgentRequestContext<AcpGoalControlRequest> context,
+  ) {
+    final request = context.params;
+    final session = _requireSession(request.sessionId);
+    if (request.action != AcpGoalControlAction.update &&
+        request.action != AcpGoalControlAction.clear) {
+      throw JsonRpcRequestException.invalidParams(
+        data: <String, Object?>{
+          'message':
+              'Claude supports goal update and clear, not '
+              '${request.action.wireName}.',
+        },
+      );
+    }
+    return session.enqueue(() async {
+      final command = switch (request.action) {
+        AcpGoalControlAction.update => '/goal ${request.objective}',
+        AcpGoalControlAction.clear => '/goal clear',
+        _ => throw StateError('Unsupported Claude goal action'),
+      };
+      await _runPrompt(
+        peer: context.client,
+        session: session,
+        prompt: <ContentBlock>[ContentBlockText(TextContent(text: command))],
+        cancellationToken: context.cancellationToken,
+      );
+      return const AcpNoResult();
+    });
+  }
+
   Future<PromptResponse> _runPrompt({
     required AcpAgentContext peer,
     required ClaudeAcpSession session,
@@ -1248,6 +1287,22 @@ final class ClaudeAcpAgent {
     claude.ClaudeMessageEnvelope envelope,
   ) async {
     final message = envelope.message;
+    if (message is claude.ActiveGoalMessage) {
+      final value = message.value;
+      if (value == null) {
+        session.goal = null;
+        await _sendGoalUpdate(peer, session);
+      } else {
+        final condition = value['condition'];
+        if (condition is String && condition.trim().isNotEmpty) {
+          session.goal = AcpGoalSnapshot(
+            objective: condition.trim(),
+            status: AcpGoalStatus.active,
+          );
+          await _sendGoalUpdate(peer, session);
+        }
+      }
+    }
     if (options.forwardSdkMessages ||
         session.shouldForwardSdkMessage(envelope.raw) ||
         options.sdkMessageFilters.any(
@@ -1380,6 +1435,19 @@ final class ClaudeAcpAgent {
         'configOptions': <Object?>[
           for (final option in session.configuration.options) option.toJson(),
         ],
+      }),
+    ),
+  );
+
+  Future<void> _sendGoalUpdate(
+    AcpAgentContext peer,
+    ClaudeAcpSession session,
+  ) => peer.updateSession(
+    SessionNotification(
+      sessionId: session.id,
+      update: SessionUpdate.fromJson(<String, Object?>{
+        'sessionUpdate': 'session_info_update',
+        '_meta': <String, Object?>{'goal': session.goal?.toJson()},
       }),
     ),
   );

@@ -46,12 +46,3 @@ final class CodexGoalSnapshot {
       tokenBudget == other.tokenBudget &&
       createdAt == other.createdAt;
 }
-
-/// Goal-control action.
-enum CodexGoalAction {
-  /// Pause the active goal.
-  pause,
-
-  /// Clear the goal.
-  clear,
-}
