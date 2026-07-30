@@ -113,13 +113,62 @@ final class _AcpSessionChannel {
   final StreamController<AcpActiveSessionEvent> _events =
       StreamController<AcpActiveSessionEvent>(sync: true);
   final Set<_AcpPromptTurnState> _turns = <_AcpPromptTurnState>{};
+  final List<v1.SessionUpdate> _inventoryUpdates = <v1.SessionUpdate>[];
+  v1.SessionModeState? _modes;
+  List<v1.SessionConfigOption>? _configOptions;
+  bool _inventoryInitialized = false;
   bool _closed = false;
 
   Stream<AcpActiveSessionEvent> get events => _events.stream;
 
+  v1.SessionModeState? get modes => _modes;
+
+  List<v1.SessionConfigOption>? get configOptions => _configOptions;
+
+  void initializeInventory({
+    required v1.SessionModeState? modes,
+    required List<v1.SessionConfigOption>? configOptions,
+  }) {
+    if (_inventoryInitialized) {
+      throw const AcpSessionStateException(
+        'Session inventory is already initialized',
+      );
+    }
+    _modes = modes;
+    _configOptions = configOptions == null
+        ? null
+        : List<v1.SessionConfigOption>.unmodifiable(configOptions);
+    _inventoryInitialized = true;
+    for (final v1.SessionUpdate update in _inventoryUpdates) {
+      _applyInventoryUpdate(update);
+    }
+    _inventoryUpdates.clear();
+  }
+
+  void setCurrentMode(v1.SessionModeId modeId) {
+    final v1.SessionModeState? modes = _modes;
+    if (modes == null) {
+      return;
+    }
+    _modes = v1.SessionModeState(
+      currentModeId: modeId,
+      availableModes: modes.availableModes,
+      meta: modes.meta,
+    );
+  }
+
+  void replaceConfigOptions(List<v1.SessionConfigOption> configOptions) {
+    _configOptions = List<v1.SessionConfigOption>.unmodifiable(configOptions);
+  }
+
   void add(v1.SessionNotification notification) {
     if (_closed) {
       return;
+    }
+    if (_inventoryInitialized) {
+      _applyInventoryUpdate(notification.update);
+    } else {
+      _inventoryUpdates.add(notification.update);
     }
     final AcpSessionUpdateEvent event = AcpSessionUpdateEvent(notification);
     _events.add(event);
@@ -127,6 +176,17 @@ final class _AcpSessionChannel {
       _turns,
     )) {
       turn.add(event);
+    }
+  }
+
+  void _applyInventoryUpdate(v1.SessionUpdate update) {
+    switch (update) {
+      case v1.SessionUpdateCurrentModeUpdate(:final value):
+        setCurrentMode(value.currentModeId);
+      case v1.SessionUpdateConfigOptionUpdate(:final value):
+        replaceConfigOptions(value.configOptions);
+      default:
+        break;
     }
   }
 

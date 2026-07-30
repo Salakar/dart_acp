@@ -322,12 +322,13 @@ final class AcpActiveSession {
     required AcpClientContext context,
     required _AcpSessionChannel channel,
     required AcpSessionSubscription subscription,
-    this.modes,
-    this.configOptions,
+    required v1.SessionModeState? modes,
+    required List<v1.SessionConfigOption>? configOptions,
     this.newSessionResponse,
   }) : _context = context,
        _channel = channel,
        _subscription = subscription {
+    channel.initializeInventory(modes: modes, configOptions: configOptions);
     _closeRegistration = context.lifecycle.cancellationToken.register(
       (Object? reason) => _fail(
         reason ?? const AcpSessionStateException('ACP connection closed'),
@@ -345,11 +346,11 @@ final class AcpActiveSession {
   /// Protocol session identifier.
   final v1.SessionId sessionId;
 
-  /// Initial mode state returned by the lifecycle request.
-  final v1.SessionModeState? modes;
+  /// Current mode state, including later control responses and updates.
+  v1.SessionModeState? get modes => _channel.modes;
 
-  /// Initial configuration returned by the lifecycle request.
-  final List<v1.SessionConfigOption>? configOptions;
+  /// Current configuration inventory and selections.
+  List<v1.SessionConfigOption>? get configOptions => _channel.configOptions;
 
   /// The creation response, or `null` for a loaded/resumed session.
   final v1.NewSessionResponse? newSessionResponse;
@@ -397,7 +398,7 @@ final class AcpActiveSession {
     v1.SessionModeId modeId, {
     CancellationToken? cancellationToken,
     AcpJsonObject? meta,
-  }) {
+  }) async {
     _ensureActive();
     final bool advertised =
         modes?.availableModes.any((v1.SessionMode mode) => mode.id == modeId) ??
@@ -409,7 +410,7 @@ final class AcpActiveSession {
         'was not advertised for this session',
       );
     }
-    return _context._requestKnown(
+    final v1.SetSessionModeResponse response = await _context._requestKnown(
       v1_methods.sessionSetModeMethod,
       v1.SetSessionModeRequest(
         sessionId: sessionId,
@@ -418,13 +419,15 @@ final class AcpActiveSession {
       ),
       cancellationToken: cancellationToken,
     );
+    _channel.setCurrentMode(modeId);
+    return response;
   }
 
   /// Sends a generated configuration-option update request.
   Future<v1.SetSessionConfigOptionResponse> setConfigOption(
     v1.SetSessionConfigOptionRequest request, {
     CancellationToken? cancellationToken,
-  }) {
+  }) async {
     _ensureActive();
     if (request.sessionId != sessionId) {
       throw ArgumentError.value(
@@ -446,11 +449,14 @@ final class AcpActiveSession {
         'was not advertised for this session',
       );
     }
-    return _context._requestKnown(
-      v1_methods.sessionSetConfigOptionMethod,
-      request,
-      cancellationToken: cancellationToken,
-    );
+    final v1.SetSessionConfigOptionResponse response = await _context
+        ._requestKnown(
+          v1_methods.sessionSetConfigOptionMethod,
+          request,
+          cancellationToken: cancellationToken,
+        );
+    _channel.replaceConfigOptions(response.configOptions);
+    return response;
   }
 
   /// Requests protocol-level close, then removes local routing.
