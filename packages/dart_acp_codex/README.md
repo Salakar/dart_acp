@@ -1,0 +1,184 @@
+<p align="center">
+  <img src="assets/logo.png" alt="dart_acp_codex logo" width="160" height="160">
+</p>
+
+<h1 align="center">dart_acp_codex</h1>
+
+<p align="center">
+  A strongly typed Dart ACP adapter for local Codex processes.
+</p>
+
+`dart_acp_codex` connects Agent Client Protocol clients to a Codex
+`app-server`. It can run as a stdio executable or be embedded as a typed
+`AcpAgentApp` in another Dart program.
+
+## Install
+
+```sh
+dart pub add dart_acp_codex
+```
+
+The default executable also needs `codex` on `PATH`, or an explicit
+`CODEX_EXECUTABLE`.
+
+## Run over stdio
+
+```sh
+dart run dart_acp_codex
+```
+
+Other executable modes are:
+
+```sh
+dart run dart_acp_codex --version
+dart run dart_acp_codex login
+dart run dart_acp_codex cli --help
+```
+
+With no arguments, stdin and stdout are reserved for ACP NDJSON. Diagnostics
+are written through the configured diagnostic callback or stderr, never the
+protocol stream.
+
+## Connect as a client
+
+```dart
+import 'package:dart_acp_codex/dart_acp_codex.dart';
+
+Future<void> main() async {
+  final client = await CodexAcpClient.start(
+    options: CodexAcpClientOptions(
+      executable: '/opt/codex',
+      modelProvider: 'openai',
+      onDiagnostic: (event) {
+        // Forward event.message to your application logger.
+      },
+    ),
+  );
+
+  try {
+    final session = await client.agent.createSession(
+      NewSessionRequest(cwd: '/workspace', mcpServers: const []),
+    );
+    print(session.sessionId.value);
+  } finally {
+    await client.close();
+  }
+}
+```
+
+`CodexAcpClient` owns the local runtime, waits for both ACP and app-server
+initialization, and closes both sides idempotently. Applications that need
+their own ACP transport can instead create a `CodexRuntime`, call
+`createAgent()`, and connect the resulting `agent.app`.
+
+Applications with an existing service boundary can implement `CodexBackend`
+and inject it into either API. The public backend contract uses immutable,
+validated `CodexJsonObject` values and typed notification/request variants.
+
+## Authentication
+
+The agent supports:
+
+- API-key login, using request metadata first and then `CODEX_API_KEY` or
+  `OPENAI_API_KEY`.
+- ChatGPT login when browser authentication is available. Set `NO_BROWSER` to
+  omit this method.
+- A custom OpenAI-compatible gateway supplied by ACP authentication metadata
+  or the provider API.
+
+Gateway headers are kept in process configuration and are never returned by
+provider discovery or included in diagnostics.
+
+## Configuration
+
+`CodexAcpClientOptions` aliases `CodexAdapterOptions`; it controls the
+executable, base app-server configuration, model provider, environment,
+shutdown grace period, stderr bound, and diagnostic sink. The executable
+additionally recognizes:
+
+| Environment variable | Meaning |
+| --- | --- |
+| `CODEX_EXECUTABLE` | Executable path or command; defaults to `codex` |
+| `CODEX_ACP_MODEL_PROVIDER` | Preferred Codex model-provider id |
+| `CODEX_ACP_SHUTDOWN_TIMEOUT_MS` | Positive shutdown grace period in milliseconds |
+| `CODEX_ACP_MAX_STDERR_CHARS` | Positive maximum retained stderr tail |
+| `CODEX_API_KEY` / `OPENAI_API_KEY` | API-key fallback |
+| `NO_BROWSER` | Disable browser-backed ChatGPT authentication |
+
+Sessions publish typed options for sandbox/approval mode, model, reasoning
+effort, and the fast service tier when the selected model supports it.
+Standard and plan collaboration modes are available through ACP session mode
+methods and `/plan`.
+
+## Providers and extensions
+
+The experimental ACP provider surface advertises one optional provider:
+`custom-gateway`. It accepts the `openai` protocol, returns only non-secret
+current routing data, rejects malformed configurations, and can be disabled
+idempotently.
+
+Two typed underscore extensions are exported:
+
+- `_session/steering` queues additional text or image input. It reports whether
+  input joined the active turn, started a new turn, or failed.
+- `_codex/session/goal_control` pauses or clears the current goal.
+
+No non-underscore compatibility extensions are registered.
+
+## Sessions, tools, and commands
+
+The adapter supports session new/load/resume/list/close/delete, ordered
+streaming updates, cancellation, history replay, additional workspace roots,
+stdio and HTTP MCP servers, permission requests, form/URL elicitations, and
+user-input questions.
+
+Mapped updates include agent messages, reasoning, plans, usage, titles,
+warnings, errors, commands, file changes, MCP/dynamic tools, web actions,
+images, collaboration activity, and context compaction. Unknown events are
+ignored without affecting other sessions.
+
+Published commands include `/status`, `/mcp`, `/skills`, `/review`,
+`/review-branch`, `/review-commit`, `/compact`, `/plan`, `/goal`, and
+`/logout`.
+
+## Security and lifecycle
+
+- Protocol values are defensively copied and validated at the boundary.
+- Secret headers and API keys are excluded from display strings and
+  diagnostics.
+- Stderr retention, NDJSON frames, pending JSON-RPC work, and history recovery
+  are bounded.
+- Session notifications are serialized and fenced by generation so closed
+  sessions cannot receive stale updates.
+- Child shutdown is idempotent and escalates to termination after the
+  configured grace period.
+
+## Example and benchmarks
+
+The [deterministic example](example/main.dart) demonstrates initialization,
+session configuration, a streamed turn, permission handling, and shutdown
+without credentials or a local executable:
+
+```sh
+dart run example/main.dart
+```
+
+The [benchmark suite](benchmark/README.md) covers message and terminal deltas,
+mixed event mapping, history replay, steering serialization, and multi-session
+routing:
+
+```sh
+dart run benchmark/adapter_benchmark.dart
+dart run benchmark/adapter_benchmark.dart --smoke
+```
+
+## Contributing
+
+See the repository
+[contribution guide](https://github.com/Salakar/dart_acp/blob/main/CONTRIBUTING.md).
+Run formatting, analysis, tests, the example smoke test, and the benchmark
+smoke mode before opening a change.
+
+## License
+
+Licensed under the [Apache License 2.0](LICENSE).
