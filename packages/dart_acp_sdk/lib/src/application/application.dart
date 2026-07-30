@@ -29,6 +29,7 @@ part 'client_app.dart';
 part 'connection.dart';
 part 'context.dart';
 part 'handlers.dart';
+part 'model_metadata.dart';
 part 'session.dart';
 part 'session_runtime.dart';
 part 'v1.dart';

@@ -948,6 +948,28 @@ void main() {
           isNot(contains('hidden')),
         ),
       );
+      final modelConfig = created.configOptions!
+          .whereType<SessionConfigOptionSelect>()
+          .singleWhere(
+            (option) => option.category == SessionConfigOptionCategory.model,
+          );
+      final modelOptions = switch (modelConfig.value.options) {
+        SessionConfigSelectOptionsUngrouped(:final value) => value,
+        SessionConfigSelectOptionsGrouped() => throw StateError(
+          'Codex model options must be ungrouped',
+        ),
+      };
+      final modalities = <String, Set<AcpModelInputModality>?>{
+        for (final option in modelOptions)
+          option.value.value: option.modelInputModalities,
+      };
+      expect(modalities['fallback-model'], <AcpModelInputModality>{
+        AcpModelInputModality.text,
+        AcpModelInputModality.image,
+      });
+      expect(modalities['second-model'], <AcpModelInputModality>{
+        AcpModelInputModality.text,
+      });
       expect(
         harness.backend.lastCall('thread/start').params['model'],
         'fallback-model',

@@ -1374,6 +1374,18 @@ final class CodexAgent {
             for (final model in _models)
               (model.id, model.name, model.description),
           ],
+          optionMeta: <String, AcpJsonObject>{
+            for (final model in _models)
+              model.id: acpModelOptionMeta(
+                inputModalities: <AcpModelInputModality>[
+                  for (final modality in model.inputModalities)
+                    switch (modality) {
+                      CodexInputModality.text => AcpModelInputModality.text,
+                      CodexInputModality.image => AcpModelInputModality.image,
+                    },
+                ],
+              ),
+          },
         ),
       _selectOption(
         id: 'reasoning-effort',
@@ -1403,6 +1415,7 @@ final class CodexAgent {
     required String category,
     required String current,
     required List<(String, String, String?)> options,
+    Map<String, AcpJsonObject> optionMeta = const <String, AcpJsonObject>{},
   }) {
     return SessionConfigOption.fromJson(<String, Object?>{
       'type': 'select',
@@ -1417,6 +1430,7 @@ final class CodexAgent {
             'name': option.$2,
             if (option.$3 != null && option.$3!.isNotEmpty)
               'description': option.$3,
+            '_meta': ?optionMeta[option.$1]?.toObject(),
           },
       ],
     });
