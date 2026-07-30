@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1
+
+- Bound Gemini subprocess shutdown and escalate to a hard kill when a
+  Node-based launcher ignores graceful termination.
+- Preserve the actionable ACP initialization error when process cleanup also
+  fails.
+
 ## 0.1.0
 
 - Add the managed `GeminiAcpClient` subprocess client.

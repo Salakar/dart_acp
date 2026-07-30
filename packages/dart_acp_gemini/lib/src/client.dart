@@ -8,7 +8,7 @@ import 'package:dart_acp_sdk/dart_acp_sdk.dart';
 import 'executable.dart';
 
 /// Version reported by the default Gemini client application.
-const String dartAcpGeminiVersion = '0.1.0';
+const String dartAcpGeminiVersion = '0.1.1';
 
 /// Receives one decoded chunk from the Gemini process's stderr stream.
 typedef GeminiAcpStderrHandler = void Function(String chunk);
@@ -238,7 +238,12 @@ final class GeminiAcpClient {
     try {
       await connection.lifecycle.ready.timeout(resolved.initializationTimeout);
     } on Object catch (error) {
-      await client.close();
+      try {
+        await client.close();
+      } on Object {
+        // Preserve the actionable initialization failure. Process cleanup is
+        // independently bounded and best-effort.
+      }
       throw GeminiAcpClientException(
         message:
             'Gemini CLI did not complete the ACP initialization handshake.',
@@ -295,10 +300,7 @@ final class GeminiAcpClient {
       // The child may already have closed stdin.
     }
     try {
-      await _process.exitCode.timeout(_options.shutdownTimeout);
-    } on TimeoutException {
-      _process.kill();
-      await _process.exitCode;
+      await _stopProcess(_process, timeout: _options.shutdownTimeout);
     } finally {
       await _stderrCapture.close();
     }
@@ -321,12 +323,7 @@ Future<String> _detectAcpFlag(
     );
     final Future<String> stdoutText = utf8.decodeStream(process.stdout);
     final Future<String> stderrText = utf8.decodeStream(process.stderr);
-    try {
-      await process.exitCode.timeout(options.flagDetectionTimeout);
-    } on TimeoutException {
-      process.kill();
-      await process.exitCode;
-    }
+    await _stopProcess(process, timeout: options.flagDetectionTimeout);
     final String help = '${await stdoutText}\n${await stderrText}';
     if (RegExp(r'(^|\s)--acp(?=\s|$)').hasMatch(help)) {
       return '--acp';
@@ -408,11 +405,35 @@ Future<void> _disposeUnconnectedProcess({
     // The child may already have closed stdin.
   }
   try {
-    await process.exitCode.timeout(shutdownTimeout);
-  } on TimeoutException {
-    process.kill();
-    await process.exitCode;
+    await _stopProcess(process, timeout: shutdownTimeout);
   } finally {
     await stderrCapture.close();
   }
+}
+
+Future<void> _stopProcess(Process process, {required Duration timeout}) async {
+  final Future<int> exitCode = process.exitCode;
+  try {
+    await exitCode.timeout(timeout);
+    return;
+  } on TimeoutException {
+    // Closing stdin was not enough. Give the process one bounded graceful
+    // termination window before escalating.
+  }
+
+  process.kill();
+  try {
+    await exitCode.timeout(timeout);
+    return;
+  } on TimeoutException {
+    // Node-based Gemini launchers can ignore SIGTERM while a spawned CLI child
+    // remains alive. A final hard kill must also stay bounded.
+  }
+
+  if (!Platform.isWindows) {
+    process.kill(ProcessSignal.sigkill);
+  } else {
+    process.kill();
+  }
+  await exitCode.timeout(timeout);
 }

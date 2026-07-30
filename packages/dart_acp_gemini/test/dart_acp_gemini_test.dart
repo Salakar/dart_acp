@@ -192,4 +192,54 @@ void main() {
               'separately.'
         : false,
   );
+
+  test(
+    'bounds shutdown when Gemini ignores graceful termination',
+    () async {
+      final Directory temporary = Directory.systemTemp.createTempSync(
+        'dart-acp-gemini-stubborn-',
+      );
+      addTearDown(() => temporary.deleteSync(recursive: true));
+      final File executable = File('${temporary.path}/gemini')
+        ..writeAsStringSync(
+          '#!/bin/sh\n'
+          'if [ "\$1" = "--help" ]; then\n'
+          '  printf "%s\\n" "  --acp  Starts ACP mode"\n'
+          '  exit 0\n'
+          'fi\n'
+          'IFS= read -r request\n'
+          "printf '%s\\n' "
+          '\'{"jsonrpc":"2.0","id":0,"result":{"protocolVersion":1,'
+          '"agentCapabilities":{"loadSession":false,'
+          '"promptCapabilities":{"image":false,"audio":false,'
+          '"embeddedContext":false},"mcpCapabilities":{"http":false,'
+          '"sse":false}},"authMethods":[]}}\'\n'
+          'trap "" TERM\n'
+          'while :; do sleep 1; done\n',
+        );
+      final ProcessResult chmod = Process.runSync('chmod', <String>[
+        '+x',
+        executable.path,
+      ]);
+      expect(chmod.exitCode, 0);
+
+      final GeminiAcpClient client = await GeminiAcpClient.start(
+        options: GeminiAcpClientOptions(
+          executable: executable.path,
+          initializationTimeout: const Duration(seconds: 5),
+          shutdownTimeout: const Duration(milliseconds: 100),
+        ),
+      );
+      final Stopwatch stopwatch = Stopwatch()..start();
+      await client.close().timeout(const Duration(seconds: 2));
+      stopwatch.stop();
+
+      expect(stopwatch.elapsed, lessThan(const Duration(seconds: 2)));
+      expect(await client.exitCode, isNonZero);
+    },
+    skip: Platform.isWindows
+        ? 'The fixture is a POSIX executable; Windows discovery is tested '
+              'separately.'
+        : false,
+  );
 }

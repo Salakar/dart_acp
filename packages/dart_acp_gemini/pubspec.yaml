@@ -1,6 +1,6 @@
 name: dart_acp_gemini
 description: A Dart ACP client for launching and connecting to Gemini CLI.
-version: 0.1.0
+version: 0.1.1
 repository: https://github.com/Salakar/dart_acp
 issue_tracker: https://github.com/Salakar/dart_acp/issues
 homepage: https://github.com/Salakar/dart_acp/tree/main/packages/dart_acp_gemini
