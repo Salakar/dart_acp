@@ -1,6 +1,6 @@
 name: dart_acp_claude
 description: A typed ACP client and adapter for Claude Code.
-version: 0.1.2
+version: 0.1.3
 repository: https://github.com/Salakar/dart_acp
 issue_tracker: https://github.com/Salakar/dart_acp/issues
 homepage: https://github.com/Salakar/dart_acp/tree/main/packages/dart_acp_claude

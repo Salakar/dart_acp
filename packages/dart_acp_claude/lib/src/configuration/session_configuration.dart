@@ -15,6 +15,7 @@ final class ClaudeSessionConfiguration {
     bool preserveUnknownRequestedModel = false,
     String? requestedAgent,
     EffortLevel? requestedEffort,
+    this.allowBypassPermissions = false,
   }) : models = _filterModels(
          initialization.models,
          availableModels,
@@ -82,6 +83,13 @@ final class ClaudeSessionConfiguration {
 
   /// Whether the ACP client accepts boolean configuration options.
   final bool useBooleanFastMode;
+
+  /// Whether the embedding client explicitly enabled unrestricted mode.
+  ///
+  /// Claude Code rejects bypass mode unless its process was started with the
+  /// matching opt-in flag. Advertising it only under the same opt-in keeps the
+  /// ACP mode inventory truthful.
+  final bool allowBypassPermissions;
 
   /// Last runtime reason Fast mode was unavailable.
   String? fastModeDisabledReason;
@@ -196,7 +204,9 @@ final class ClaudeSessionConfiguration {
       .toList(growable: false);
 
   bool _modeAvailable(PermissionMode candidate) {
-    if (candidate == PermissionMode.bypassPermissions) return false;
+    if (candidate == PermissionMode.bypassPermissions) {
+      return allowBypassPermissions;
+    }
     if (candidate != PermissionMode.auto) return true;
     return _selectedModel?.supportsAutoMode ?? false;
   }
@@ -342,7 +352,7 @@ final class ClaudeSessionConfiguration {
     final next = PermissionMode.values
         .where((candidate) => candidate.wireValue == value)
         .firstOrNull;
-    if (next == null || next == PermissionMode.bypassPermissions) return false;
+    if (next == null) return false;
     if (!_modeAvailable(next) || next == mode) return false;
     mode = next;
     return true;

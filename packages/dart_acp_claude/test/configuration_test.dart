@@ -347,6 +347,27 @@ void main() {
     expect(configuration.reconcileMode('plan'), isFalse);
     expect(configuration.reconcileMode('bypassPermissions'), isFalse);
     expect(configuration.reconcileMode('future-mode'), isFalse);
+
+    final bypassEnabled = ClaudeSessionConfiguration(
+      initialization: claude.ClaudeInitializationResult.fromJson(
+        <String, Object?>{
+          'models': <Object?>[
+            <String, Object?>{
+              'value': 'default',
+              'displayName': 'Default',
+              'supportsAutoMode': true,
+            },
+          ],
+        },
+      ),
+      allowBypassPermissions: true,
+    );
+    expect(
+      bypassEnabled.modes.availableModes.map((mode) => mode.id.value),
+      contains('bypassPermissions'),
+    );
+    expect(bypassEnabled.reconcileMode('bypassPermissions'), isTrue);
+    expect(bypassEnabled.mode, claude.PermissionMode.bypassPermissions);
   });
 
   test('preserves a resumed live model and reuses SDK capabilities', () {

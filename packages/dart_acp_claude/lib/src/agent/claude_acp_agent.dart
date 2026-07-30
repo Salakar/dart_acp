@@ -675,6 +675,7 @@ final class ClaudeAcpAgent {
       useBooleanFastMode: peer.lifecycle.peerCapabilities.supports(
         'clientCapabilities.session.configOptions.boolean',
       ),
+      allowBypassPermissions: options.allowDangerouslySkipPermissions,
       preserveUnknownRequestedModel: resumedUsage?.model.isNotEmpty ?? false,
     );
     final session = ClaudeAcpSession(
