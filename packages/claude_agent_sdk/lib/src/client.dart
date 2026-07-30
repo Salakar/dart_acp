@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'context_usage.dart';
 import 'control/control_channel.dart';
+import 'control/control_models.dart';
 import 'errors.dart';
+import 'initialization.dart';
 import 'input.dart';
 import 'json.dart';
 import 'mcp.dart';
@@ -37,6 +39,7 @@ final class ClaudeAgentClient {
   Future<void> connect({
     String? prompt,
     Stream<UserInput>? promptStream,
+    Duration? initializeTimeout,
   }) async {
     if (_channel != null) return;
     if (prompt != null && promptStream != null) {
@@ -68,7 +71,7 @@ final class ClaudeAgentClient {
       await transport.connect();
       await channel.start();
       _iterator = StreamIterator<JsonMap>(channel.messages);
-      await channel.initialize();
+      await channel.initialize(timeout: initializeTimeout);
       if (prompt != null) {
         await channel.sendInput(UserInput.text(prompt).toJson());
       } else if (promptStream != null) {
@@ -115,6 +118,8 @@ final class ClaudeAgentClient {
               content: message.content,
               sessionId: defaultSessionId,
               parentToolUseId: message.parentToolUseId,
+              uuid: message.uuid,
+              priority: message.priority,
             )
           : message;
       await _connectedChannel.sendInput(adjusted.toJson());
@@ -122,7 +127,7 @@ final class ClaudeAgentClient {
   }
 
   /// Receives messages until the CLI output closes.
-  Stream<AgentMessage> receiveMessages() async* {
+  Stream<ClaudeMessageEnvelope> receiveMessageEnvelopes() async* {
     _connectedChannel;
     final iterator = _iterator;
     if (iterator == null) {
@@ -131,10 +136,17 @@ final class ClaudeAgentClient {
       );
     }
     while (await iterator.moveNext()) {
-      final message = _codec.decode(iterator.current);
-      if (message != null) yield message;
+      final raw = iterator.current;
+      final message = _codec.decode(raw);
+      if (message != null) {
+        yield ClaudeMessageEnvelope(message: message, raw: raw);
+      }
     }
   }
+
+  /// Receives typed messages until the CLI output closes.
+  Stream<AgentMessage> receiveMessages() =>
+      receiveMessageEnvelopes().map((envelope) => envelope.message);
 
   /// Stream view over [receiveMessages].
   Stream<AgentMessage> get messages => receiveMessages();
@@ -147,19 +159,81 @@ final class ClaudeAgentClient {
     }
   }
 
+  /// Receives one turn while preserving each original runtime frame.
+  Stream<ClaudeMessageEnvelope> receiveResponseEnvelopes() async* {
+    await for (final envelope in receiveMessageEnvelopes()) {
+      yield envelope;
+      if (envelope.message is ResultMessage) return;
+    }
+  }
+
   /// Requests interruption of the active turn.
-  Future<void> interrupt() => _connectedChannel.interrupt();
+  Future<ClaudeInterruptReceipt> interrupt({bool cancelQueued = false}) =>
+      _connectedChannel.interrupt(cancelQueued: cancelQueued);
+
+  /// Typed information from the initialize handshake.
+  ClaudeInitializationResult get initializationResult {
+    final result = _connectedChannel.initializationResult;
+    if (result == null) {
+      throw const CliConnectionException(
+        'Initialization metadata is unavailable before connect() completes',
+      );
+    }
+    return ClaudeInitializationResult.fromJson(result);
+  }
+
+  /// Repeats initialization and returns fresh runtime metadata.
+  Future<ClaudeInitializationResult> reinitialize() async =>
+      ClaudeInitializationResult.fromJson(
+        await _connectedChannel.reinitialize(),
+      );
+
+  /// Discovers currently supported slash commands.
+  Future<List<ClaudeCommandInfo>> supportedCommands() async =>
+      (await _connectedChannel.supportedCommands())
+          .map(ClaudeCommandInfo.fromJson)
+          .toList(growable: false);
+
+  /// Discovers currently supported agents.
+  Future<List<ClaudeAgentInfo>> supportedAgents() async =>
+      (await _connectedChannel.supportedAgents())
+          .map(ClaudeAgentInfo.fromJson)
+          .toList(growable: false);
+
+  /// Discovers models available to the current session.
+  Future<List<ClaudeModelInfo>> supportedModels() async =>
+      List<ClaudeModelInfo>.unmodifiable(initializationResult.models);
+
+  /// Returns authenticated account metadata.
+  Future<ClaudeAccountInfo?> accountInfo() async =>
+      initializationResult.account;
+
+  /// Applies session-scoped effort, agent, or Fast-mode [settings].
+  Future<void> applyFlagSettings(ClaudeFlagSettings settings) =>
+      _connectedChannel.applyFlagSettings(settings);
 
   /// Changes the active permission [mode].
   Future<void> setPermissionMode(PermissionMode mode) =>
       _connectedChannel.setPermissionMode(mode);
 
+  /// Tightens or clears the permission policy for one MCP server.
+  Future<McpPermissionModeOverrideResult> setMcpPermissionModeOverride(
+    String serverName,
+    McpPermissionModeOverride? mode,
+  ) => _connectedChannel.setMcpPermissionModeOverride(serverName, mode);
+
   /// Changes the active model, or restores the default when [model] is null.
   Future<void> setModel([String? model]) => _connectedChannel.setModel(model);
 
   /// Rewinds checkpointed files to [userMessageId].
-  Future<void> rewindFiles(String userMessageId) =>
-      _connectedChannel.rewindFiles(userMessageId);
+  Future<RewindFilesResult> rewindFiles(
+    String userMessageId, {
+    bool dryRun = false,
+  }) => _connectedChannel.rewindFiles(userMessageId, dryRun: dryRun);
+
+  /// Seeds the runtime's file-read state for subsequent edit validation.
+  Future<void> seedReadState(String path, int modifiedAtMilliseconds) =>
+      _connectedChannel.seedReadState(path, modifiedAtMilliseconds);
 
   /// Reconnects a failed MCP server.
   Future<void> reconnectMcpServer(String serverName) =>
@@ -169,14 +243,41 @@ final class ClaudeAgentClient {
   Future<void> toggleMcpServer(String serverName, {required bool enabled}) =>
       _connectedChannel.toggleMcpServer(serverName, enabled: enabled);
 
+  /// Replaces dynamically managed MCP servers.
+  Future<McpSetServersResult> setMcpServers(
+    Map<String, McpServerConfig> servers,
+  ) => _connectedChannel.setMcpServers(servers);
+
   /// Stops a delegated task.
   Future<void> stopTask(String taskId) => _connectedChannel.stopTask(taskId);
+
+  /// Backgrounds one or all foreground tasks.
+  Future<bool> backgroundTasks([String? toolUseId]) =>
+      _connectedChannel.backgroundTasks(toolUseId);
 
   /// Gets current MCP connection state.
   Future<McpStatus> getMcpStatus() => _connectedChannel.getMcpStatus();
 
   /// Gets current context-window usage.
   Future<ContextUsage> getContextUsage() => _connectedChannel.getContextUsage();
+
+  /// Gets the experimental structured usage snapshot.
+  Future<ClaudeUsageSnapshot> getUsage() => _connectedChannel.getUsage();
+
+  /// Reads one permission-gated file through the running session.
+  Future<ClaudeReadFileResult?> readFile(
+    String path, {
+    int? maxBytes,
+    ClaudeReadFileEncoding encoding = ClaudeReadFileEncoding.utf8,
+  }) =>
+      _connectedChannel.readFile(path, maxBytes: maxBytes, encoding: encoding);
+
+  /// Reloads plugins and returns refreshed components.
+  Future<ReloadPluginsResult> reloadPlugins() =>
+      _connectedChannel.reloadPlugins();
+
+  /// Reloads skills and returns the refreshed skill commands.
+  Future<ReloadSkillsResult> reloadSkills() => _connectedChannel.reloadSkills();
 
   /// Returns information from the initialize handshake.
   JsonMap? get serverInfo => _connectedChannel.initializationResult;

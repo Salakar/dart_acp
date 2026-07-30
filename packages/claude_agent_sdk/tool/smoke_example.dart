@@ -4,6 +4,7 @@ Future<void> main() async {
   for (final example in const [
     'example/quick_start.dart',
     'example/session_store.dart',
+    'example/subagents.dart',
   ]) {
     final result = await Process.run(Platform.resolvedExecutable, [
       'run',

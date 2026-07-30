@@ -39,6 +39,28 @@ final class ThinkingBlock extends ContentBlock {
   };
 }
 
+/// Image content returned in a message.
+final class ImageBlock extends ContentBlock {
+  /// Creates an image block from a provider [source].
+  ImageBlock({required JsonMap source}) : source = immutableJsonMap(source);
+
+  /// Provider image source (`base64` or URL).
+  final JsonMap source;
+
+  /// Source media type, when present.
+  String? get mediaType =>
+      source['media_type'] as String? ?? source['mediaType'] as String?;
+
+  /// Base64 source data, when present.
+  String? get data => source['data'] as String?;
+
+  /// Source URL, when present.
+  String? get url => source['url'] as String?;
+
+  @override
+  JsonMap toJson() => <String, Object?>{'type': 'image', 'source': source};
+}
+
 /// A client-executed tool invocation.
 final class ToolUseBlock extends ContentBlock {
   /// Creates a tool-use block.
@@ -160,18 +182,24 @@ final class ServerToolUseBlock extends ContentBlock {
 /// Result of a provider-executed server tool.
 final class ServerToolResultBlock extends ContentBlock {
   /// Creates a server tool result.
-  ServerToolResultBlock({required this.toolUseId, required JsonMap content})
-    : content = immutableJsonMap(content);
+  ServerToolResultBlock({
+    required this.toolUseId,
+    required JsonValue content,
+    this.type = 'advisor_tool_result',
+  }) : content = immutableJsonValue(content);
 
   /// Invocation identifier.
   final String toolUseId;
 
+  /// Exact block discriminator.
+  final String type;
+
   /// Opaque provider result.
-  final JsonMap content;
+  final JsonValue content;
 
   @override
   JsonMap toJson() => {
-    'type': 'advisor_tool_result',
+    'type': type,
     'tool_use_id': toolUseId,
     'content': content,
   };

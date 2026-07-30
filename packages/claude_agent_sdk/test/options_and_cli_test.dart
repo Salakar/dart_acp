@@ -72,6 +72,27 @@ void main() {
         ),
         throwsArgumentError,
       );
+      expect(
+        () => ClaudeAgentOptions(resumeSessionAt: 'message'),
+        throwsArgumentError,
+      );
+      expect(
+        () => ClaudeAgentOptions(
+          permissionMode: PermissionMode.bypassPermissions,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => ClaudeAgentOptions(supportedDialogKinds: const ['dialog']),
+        throwsArgumentError,
+      );
+      expect(
+        () => ClaudeAgentOptions(
+          settings: '/tmp/settings.json',
+          inlineSettings: const {'model': 'sonnet'},
+        ),
+        throwsArgumentError,
+      );
     });
 
     test('copies options for a materialized resume tree', () {
@@ -149,6 +170,70 @@ void main() {
       expect(arguments, contains('--future-flag'));
       expect(arguments, contains('--value=-x'));
       expect(arguments.last, 'stream-json');
+    });
+
+    test('maps current process and initialization-oriented options', () async {
+      final options = ClaudeAgentOptions(
+        agent: 'reviewer',
+        agents: {
+          'reviewer': AgentDefinition(
+            description: 'Reviews code',
+            prompt: 'Review carefully',
+            criticalSystemReminder: 'Never edit',
+            observer: 'audit',
+            observerMessage: 'Focus on safety',
+          ),
+        },
+        toolAliases: const {'Bash': 'mcp__workspace__bash'},
+        toolConfig: const BuiltinToolConfig(
+          questionPreviewFormat: QuestionPreviewFormat.html,
+        ),
+        permissionMode: PermissionMode.bypassPermissions,
+        allowDangerouslySkipPermissions: true,
+        resume: 'session',
+        resumeSessionAt: '-message-id',
+        inlineSettings: const {'model': 'sonnet'},
+        managedSettings: const {
+          'sandbox': {
+            'network': {'strictAllowlist': true},
+          },
+        },
+        persistSession: false,
+        plugins: [SdkPluginConfig('/tmp/plugin', skipMcpDiscovery: true)],
+        debugFile: '/tmp/claude.log',
+      );
+
+      final arguments = await buildCliArguments(options, windows: false);
+      expect(arguments, containsAllInOrder(['--agent', 'reviewer']));
+      expect(arguments, contains('--allow-dangerously-skip-permissions'));
+      expect(arguments, contains('--resume-session-at=-message-id'));
+      expect(arguments, contains('--no-session-persistence'));
+      expect(
+        arguments,
+        containsAllInOrder(['--plugin-dir-no-mcp', '/tmp/plugin']),
+      );
+      expect(
+        arguments,
+        containsAllInOrder(['--debug-file', '/tmp/claude.log']),
+      );
+      final settingsIndex = arguments.indexOf('--settings');
+      expect(
+        jsonDecode(arguments[settingsIndex + 1]),
+        containsPair('model', 'sonnet'),
+      );
+      final plan = await createCliLaunchPlan(
+        ClaudeAgentOptions(
+          cliPath: '/bin/true',
+          toolConfig: options.toolConfig,
+        ),
+        parentEnvironment: const <String, String>{},
+        isWindows: false,
+      );
+      expect(plan.environment['CLAUDE_CODE_QUESTION_PREVIEW_FORMAT'], 'html');
+      expect(
+        options.agents['reviewer']!.toJson(),
+        containsPair('observer', 'audit'),
+      );
     });
 
     test('forces stdio permission prompts for callbacks', () async {

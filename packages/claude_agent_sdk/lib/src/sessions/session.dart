@@ -63,22 +63,27 @@ final class SessionMessage {
     required this.uuid,
     required this.sessionId,
     required JsonValue message,
+    this.parentToolUseId,
+    this.parentAgentId,
   }) : message = immutableJsonValue(message);
 
-  /// `user` or `assistant`.
+  /// `user`, `assistant`, or `system`.
   final String type;
 
   /// Message identifier.
   final String uuid;
 
-  /// Parent session identifier.
+  /// Session identifier.
   final String sessionId;
 
   /// Raw Anthropic API message object.
   final JsonValue message;
 
-  /// Top-level historical messages never have a parent tool-use ID.
-  String? get parentToolUseId => null;
+  /// Parent tool invocation for a nested message.
+  final String? parentToolUseId;
+
+  /// Agent that spawned the subagent owning this message.
+  final String? parentAgentId;
 }
 
 /// Result of a session fork.
@@ -176,6 +181,7 @@ List<SessionMessage> getSessionMessages(
   String? directory,
   int? limit,
   int offset = 0,
+  bool includeSystemMessages = false,
   String? claudeConfigDirectory,
 }) {
   _validatePaging(limit, offset);
@@ -186,7 +192,12 @@ List<SessionMessage> getSessionMessages(
     claudeConfigDirectory: claudeConfigDirectory,
   );
   if (file == null) return const [];
-  return _messagesFromEntries(_readEntries(file), limit, offset);
+  return _messagesFromEntries(
+    _readEntries(file),
+    limit,
+    offset,
+    includeSystemMessages: includeSystemMessages,
+  );
 }
 
 /// Lists nested subagent identifiers for a local session.
@@ -427,6 +438,7 @@ Future<List<SessionMessage>> getSessionMessagesFromStore(
   String? directory,
   int? limit,
   int offset = 0,
+  bool includeSystemMessages = false,
 }) async {
   _validatePaging(limit, offset);
   if (!isUuid(sessionId)) return const [];
@@ -438,7 +450,12 @@ Future<List<SessionMessage>> getSessionMessagesFromStore(
   );
   return entries == null
       ? const []
-      : _messagesFromEntries(entries, limit, offset);
+      : _messagesFromEntries(
+          entries,
+          limit,
+          offset,
+          includeSystemMessages: includeSystemMessages,
+        );
 }
 
 /// Lists nested subagent IDs from an external [SessionStore].
@@ -857,6 +874,7 @@ List<SessionMessage> _messagesFromEntries(
   int? limit,
   int offset, {
   bool allowSidechains = false,
+  bool includeSystemMessages = false,
 }) {
   final linked = entries
       .where((entry) {
@@ -899,9 +917,10 @@ List<SessionMessage> _messagesFromEntries(
             (current['isSidechain'] != true &&
                 current['teamName'] == null &&
                 current['isMeta'] != true);
-        final position = positions[id] ?? -1;
+        final candidate = includeSystemMessages ? terminal : current;
+        final position = positions[candidate['uuid']] ?? -1;
         if (isMain && position > bestPosition) {
-          best = current;
+          best = candidate;
           bestPosition = position;
         }
         break;
@@ -926,7 +945,9 @@ List<SessionMessage> _messagesFromEntries(
   final visible = reversed.reversed
       .where(
         (entry) =>
-            (entry['type'] == 'user' || entry['type'] == 'assistant') &&
+            (entry['type'] == 'user' ||
+                entry['type'] == 'assistant' ||
+                (includeSystemMessages && entry['type'] == 'system')) &&
             entry['isMeta'] != true &&
             (allowSidechains || entry['isSidechain'] != true) &&
             (allowSidechains || entry['teamName'] == null),
@@ -939,6 +960,16 @@ List<SessionMessage> _messagesFromEntries(
               ? entry['sessionId']! as String
               : '',
           message: entry['message'],
+          parentToolUseId: entry['parent_tool_use_id'] is String
+              ? entry['parent_tool_use_id']! as String
+              : entry['parentToolUseId'] is String
+              ? entry['parentToolUseId']! as String
+              : null,
+          parentAgentId: entry['parent_agent_id'] is String
+              ? entry['parent_agent_id']! as String
+              : entry['parentAgentId'] is String
+              ? entry['parentAgentId']! as String
+              : null,
         ),
       )
       .toList(growable: false);

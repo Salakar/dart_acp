@@ -14,7 +14,8 @@
 
 `claude_agent_sdk` launches an installed Claude Code CLI and exposes one-shot
 queries, interactive sessions, typed stream messages, runtime permissions,
-hooks, in-process MCP tools, and persistent session APIs.
+hooks, programmatic subagents, user-dialog callbacks, settings resolution,
+in-process MCP tools, and persistent session APIs.
 
 The package does not bundle Claude Code or an API client. Install and
 authenticate the `claude` CLI before running a live agent.
@@ -25,7 +26,7 @@ authenticate the `claude` CLI before running a live agent.
 dart pub add claude_agent_sdk
 ```
 
-The package requires Dart 3.11 or newer and Claude Code 2.0 or newer.
+The package requires Dart 3.10 or newer and Claude Code 2.0 or newer.
 
 ## Quick Start
 
@@ -78,6 +79,54 @@ try {
 }
 ```
 
+## Pre-warmed query
+
+Pay process startup and initialization cost before a latency-sensitive prompt.
+A warm handle accepts exactly one prompt and closes itself after the result:
+
+```dart
+final warm = await startup(options: ClaudeAgentOptions(model: 'sonnet'));
+await for (final message in warm.query('Summarize the current diff.')) {
+  // The process was already initialized before query() was called.
+}
+```
+
+## Subagents
+
+Define subagents in `agents` and optionally select one as the main-thread
+agent. Claude invokes a subagent through its Agent tool based on the
+description. `forwardSubagentText` exposes its complete nested transcript;
+otherwise the runtime forwards only tool activity.
+
+```dart
+final options = ClaudeAgentOptions(
+  agent: 'coordinator',
+  agents: {
+    'coordinator': AgentDefinition(
+      description: 'Coordinates implementation work.',
+      prompt: 'Delegate focused research and verification tasks.',
+      tools: const ['Read', 'Glob', 'Grep', 'Agent'],
+    ),
+    'test-runner': AgentDefinition(
+      description: 'Runs tests and diagnoses failures.',
+      prompt: 'Run the smallest relevant test suite and report evidence.',
+      tools: const ['Read', 'Glob', 'Grep', 'Bash'],
+      model: 'haiku',
+      maxTurns: 8,
+      runsInBackground: true,
+    ),
+  },
+  forwardSubagentText: true,
+  agentProgressSummaries: true,
+);
+```
+
+Subagent assistant and user messages carry `parentToolUseId`,
+`subagentType`, and `taskDescription` when supplied by the runtime. Use
+`listSubagents` / `getSubagentMessages` (or their `SessionStore` variants) to
+read persisted nested conversations. `supportedAgents()` discovers the
+effective programmatic, filesystem, plugin, and built-in agent set.
+
 ## Permissions, hooks, and SDK MCP
 
 `canUseTool` receives interactive permission decisions over the control
@@ -97,7 +146,7 @@ final options = ClaudeAgentOptions(
       HookMatcher(
         matcher: 'Write|Edit',
         hooks: [
-          (input, toolUseId) async =>
+          (input, toolUseId, context) async =>
               const HookOutput(systemMessage: 'Edit audited by Dart.'),
         ],
       ),
@@ -146,20 +195,35 @@ credentials, and cleans the tree after disconnect.
 
 | Area | Dart API |
 | --- | --- |
-| One-shot | `query`, `queryStream` |
+| One-shot | `query`, `queryStream`, pre-warmed `startup` / `ClaudeWarmQuery` |
 | Interactive | `ClaudeAgentClient`, `UserInput` |
-| Messages | `AssistantMessage`, `UserMessage`, `ResultMessage`, system/task/rate-limit events |
-| Control | interrupt, permission/model switching, file rewind, task stop, MCP and context status |
-| Extensibility | typed hooks, `canUseTool`, stdio/SSE/HTTP MCP config, `SdkMcpServer` |
-| Sessions | local list/read/rename/tag/fork/delete and corresponding `SessionStore` APIs |
+| Messages | `AssistantMessage`, `UserMessage`, `ResultMessage`, system/task/rate-limit events, raw-preserving envelopes |
+| Control | initialization/reinitialization, interrupt/queue cancellation, permission/model switching, file read/rewind, dynamic MCP, plugin/skill reload, task stop/background, usage and context status |
+| Interaction | typed permission and elicitation callbacks with cancellation |
+| Extensibility | typed hooks, programmatic/main-thread agents, skills/plugins, tool aliases, `canUseTool`, stdio/SSE/HTTP MCP config, `SdkMcpServer` |
+| Sessions | local list/read/rename/tag/fork/delete, optional system history, nested subagent ancestry/transcripts, and corresponding `SessionStore` APIs |
+| Runtime | CLI discovery/execution/logout and provenance-aware tiered settings resolution |
 
-Unknown message types are skipped. Unknown content blocks are preserved as
-`UnknownContentBlock`, keeping newer CLI output forward-compatible.
+Unknown top-level messages and content blocks are preserved as
+`UnknownAgentMessage` and `UnknownContentBlock`, keeping newer CLI output
+forward-compatible.
+
+Model discovery exposes effort, adaptive-thinking, Fast-mode, and auto-mode
+capabilities. `UserMessage.toolResultMetadata` provides the runtime's
+per-tool reason and optional feedback when a denied, interrupted, or cancelled
+tool never executed. Hook callbacks receive a `ControlCallbackContext`; its
+cancellation signal is triggered when the runtime cancels the pending hook.
+
+`UserInput` accepts optional `uuid` and `priority` fields for transports that
+need turn identity or immediate steering. Message envelopes retain the raw
+wire payload alongside the typed message when protocol extensions must be
+inspected without losing forward compatibility.
 
 ## Examples and verification
 
 ```console
 dart run example/quick_start.dart
+dart run example/subagents.dart
 CLAUDE_AGENT_SDK_LIVE_TEST=1 dart run example/quick_start.dart
 dart test
 dart analyze .

@@ -114,6 +114,44 @@ void main() {
       expect(getSessionInfo('invalid'), isNull);
     });
 
+    test('optionally includes system history and nested-agent ancestry', () {
+      const systemId = '44444444-4444-4444-8444-444444444444';
+      writeJsonl(sessionFile, [
+        ...transcriptEntries(),
+        {
+          'type': 'system',
+          'uuid': systemId,
+          'parentUuid': assistantId,
+          'sessionId': sessionId,
+          'parent_tool_use_id': 'agent-tool',
+          'parent_agent_id': 'parent-agent',
+          'message': {'subtype': 'compact_boundary'},
+        },
+      ]);
+
+      expect(
+        getSessionMessages(
+          sessionId,
+          directory: workspace.path,
+          claudeConfigDirectory: config.path,
+        ).map((message) => message.type),
+        ['user', 'assistant'],
+      );
+      final messages = getSessionMessages(
+        sessionId,
+        directory: workspace.path,
+        includeSystemMessages: true,
+        claudeConfigDirectory: config.path,
+      );
+      expect(messages.map((message) => message.type), [
+        'user',
+        'assistant',
+        'system',
+      ]);
+      expect(messages.last.parentToolUseId, 'agent-tool');
+      expect(messages.last.parentAgentId, 'parent-agent');
+    });
+
     test('renames, tags, forks, and deletes', () {
       renameSession(
         sessionId,

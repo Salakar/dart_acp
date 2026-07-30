@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../context_usage.dart';
+import '../elicitation.dart';
 import '../errors.dart';
 import '../hooks.dart';
 import '../json.dart';
@@ -11,6 +12,7 @@ import '../sessions/session_mirror_batcher.dart';
 import '../sessions/session_store.dart';
 import '../transport/transport.dart';
 import '../uuid.dart';
+import 'control_models.dart';
 
 const _deferringTaskTypes = {'local_agent', 'local_workflow'};
 const _terminalTaskStatuses = {'completed', 'failed', 'killed', 'stopped'};
@@ -33,6 +35,13 @@ final class ControlChannel {
         onError: _reportMirrorError,
       );
     }
+    if (options.mcp case McpServers(:final servers)) {
+      _sdkMcpServers.addEntries(
+        servers.entries
+            .where((entry) => entry.value is SdkMcpServer)
+            .map((entry) => MapEntry(entry.key, entry.value as SdkMcpServer)),
+      );
+    }
   }
 
   /// Underlying raw transport.
@@ -44,13 +53,17 @@ final class ControlChannel {
   final StreamController<JsonMap> _messages = StreamController<JsonMap>();
   final Map<String, Completer<JsonMap>> _pending = {};
   final Map<String, HookCallback> _hookCallbacks = {};
+  final Map<String, SdkMcpServer> _sdkMcpServers = {};
   final Set<String> _cancelledIncoming = {};
+  final Map<String, ControlCallbackCancellation> _incomingCancellations = {};
   final Set<String> _inflightTasks = {};
   final Completer<void> _runEnded = Completer<void>();
   StreamSubscription<JsonMap>? _readSubscription;
   Future<void> _routingTail = Future<void>.value();
   SessionMirrorBatcher? _mirrorBatcher;
   JsonMap? _initializationResult;
+  JsonMap? _initializeRequest;
+  List<JsonMap>? _latestCommands;
   int _requestCounter = 0;
   int _callbackCounter = 0;
   bool _closed = false;
@@ -81,8 +94,25 @@ final class ControlChannel {
   }
 
   /// Performs the SDK initialize handshake.
-  Future<JsonMap> initialize() async {
+  Future<JsonMap> initialize({Duration? timeout}) async {
     if (_initialized) return _initializationResult ?? const {};
+    final request = _initializeRequest ??= _buildInitializeRequest();
+    final result = await _sendInitializeRequest(request, timeout: timeout);
+    _initialized = true;
+    _initializationResult = result;
+    return result;
+  }
+
+  /// Repeats the initialize handshake against the running CLI.
+  Future<JsonMap> reinitialize() async {
+    final request = _initializeRequest ??= _buildInitializeRequest();
+    final result = await _sendInitializeRequest(request);
+    _initialized = true;
+    _initializationResult = result;
+    return result;
+  }
+
+  JsonMap _buildInitializeRequest() {
     final hooks = <String, Object?>{};
     for (final eventEntry in options.hooks.entries) {
       final configs = <Object?>[];
@@ -105,26 +135,46 @@ final class ControlChannel {
     final request = <String, Object?>{
       'subtype': 'initialize',
       'hooks': hooks.isEmpty ? null : hooks,
+      if (_sdkMcpServers.isNotEmpty)
+        'sdkMcpServers': _sdkMcpServers.keys.toList(growable: false),
+      if (options.systemPrompt case BlockSystemPrompt(:final blocks))
+        'systemPrompt': blocks,
+      if (options.planModeInstructions != null)
+        'planModeInstructions': options.planModeInstructions,
+      if (options.toolAliases.isNotEmpty) 'toolAliases': options.toolAliases,
       if (options.agents.isNotEmpty)
         'agents': options.agents.map(
           (name, agent) => MapEntry(name, agent.toJson()),
         ),
+      if (options.title != null) 'title': options.title,
       if (options.systemPrompt case ClaudeCodeSystemPrompt(
         :final excludeDynamicSections?,
       ))
         'excludeDynamicSections': excludeDynamicSections,
       if (options.skills case NamedSkills(:final names)) 'skills': names,
+      if (options.promptSuggestions)
+        'promptSuggestions': options.promptSuggestions,
+      if (options.agentProgressSummaries)
+        'agentProgressSummaries': options.agentProgressSummaries,
+      if (options.forwardSubagentText)
+        'forwardSubagentText': options.forwardSubagentText,
+      if (options.supportedDialogKinds.isNotEmpty)
+        'supportedDialogKinds': options.supportedDialogKinds,
     };
-    final result = await sendControlRequest(
-      request,
-      timeout: options.initializeTimeout < const Duration(seconds: 60)
-          ? const Duration(seconds: 60)
-          : options.initializeTimeout,
-    );
-    _initialized = true;
-    _initializationResult = result;
-    return result;
+    return immutableJsonMap(request);
   }
+
+  Future<JsonMap> _sendInitializeRequest(
+    JsonMap request, {
+    Duration? timeout,
+  }) => sendControlRequest(
+    request,
+    timeout:
+        timeout ??
+        (options.initializeTimeout < const Duration(seconds: 60)
+            ? const Duration(seconds: 60)
+            : options.initializeTimeout),
+  );
 
   Future<void> _routeMessage(JsonMap message) async {
     if (_closed) return;
@@ -143,6 +193,7 @@ final class ControlChannel {
             ),
           );
         } else {
+          _redeliverPendingControlRequests(response);
           final value = response['response'];
           pending.complete(
             value == null
@@ -156,7 +207,10 @@ final class ControlChannel {
         return;
       case 'control_cancel_request':
         final id = message['request_id'];
-        if (id is String) _cancelledIncoming.add(id);
+        if (id is String) {
+          _cancelledIncoming.add(id);
+          _incomingCancellations[id]?.cancel();
+        }
         return;
       case 'transcript_mirror':
         // Transcript mirror frames are consumed by SessionMirrorBatcher when
@@ -175,6 +229,12 @@ final class ControlChannel {
         return;
       case 'system':
         _trackTaskLifecycle(message);
+        if (message['subtype'] == 'commands_changed') {
+          _latestCommands = _objectList(
+            message['commands'],
+            'commands_changed.commands',
+          );
+        }
         _messages.add(message);
         return;
       case 'result':
@@ -198,6 +258,20 @@ final class ControlChannel {
     }
   }
 
+  void _redeliverPendingControlRequests(JsonMap response) {
+    for (final key in const [
+      'pending_permission_requests',
+      'pending_user_dialog_requests',
+    ]) {
+      final pending = response[key];
+      if (pending is! List<Object?>) continue;
+      for (final value in pending) {
+        final request = asJsonMap(value, '$key item');
+        unawaited(_handleIncomingRequest(request));
+      }
+    }
+  }
+
   Future<void> _reportMirrorError(SessionKey? key, String error) async {
     if (_messages.isClosed) return;
     _messages.add({
@@ -212,6 +286,8 @@ final class ControlChannel {
 
   Future<void> _handleIncomingRequest(JsonMap envelope) async {
     final requestId = requiredString(envelope, 'request_id', 'control request');
+    final cancellation = ControlCallbackCancellation(requestId: requestId);
+    _incomingCancellations[requestId] = cancellation;
     try {
       final request = asJsonMap(envelope['request'], 'control request payload');
       final subtype = requiredString(
@@ -220,14 +296,19 @@ final class ControlChannel {
         'control request payload',
       );
       final response = switch (subtype) {
-        'can_use_tool' => await _handlePermissionRequest(request),
-        'hook_callback' => await _handleHookRequest(request),
+        'can_use_tool' => await _handlePermissionRequest(request, cancellation),
+        'hook_callback' => await _handleHookRequest(request, cancellation),
         'mcp_message' => await _handleMcpRequest(request),
+        'mcp_elicitation' ||
+        'elicitation' => await _handleElicitationRequest(request, cancellation),
+        'user_dialog' || 'request_user_dialog' =>
+          await _handleUserDialogRequest(request, cancellation),
         _ => throw ControlProtocolException(
           'Unsupported incoming control request: $subtype',
         ),
       };
       if (_cancelledIncoming.remove(requestId) || _closed) return;
+      if (response == null) return;
       await transport.write(
         encodeJsonLine({
           'type': 'control_response',
@@ -250,10 +331,46 @@ final class ControlChannel {
           },
         }),
       );
+    } finally {
+      _incomingCancellations.remove(requestId);
     }
   }
 
-  Future<JsonMap> _handlePermissionRequest(JsonMap request) async {
+  Future<JsonMap> _handleElicitationRequest(
+    JsonMap request,
+    ControlCallbackCancellation cancellation,
+  ) async {
+    final callback = options.onElicitation;
+    if (callback == null) {
+      return const ClaudeElicitationResult.decline().toJson();
+    }
+    final result = await callback(
+      ClaudeElicitationRequest.fromJson(request),
+      ControlCallbackContext(cancellation: cancellation),
+    );
+    return result.toJson();
+  }
+
+  Future<JsonMap?> _handleUserDialogRequest(
+    JsonMap request,
+    ControlCallbackCancellation cancellation,
+  ) async {
+    final parsed = ClaudeUserDialogRequest.fromJson(request);
+    final callback = options.onUserDialog;
+    if (callback == null ||
+        !options.supportedDialogKinds.contains(parsed.dialogKind)) {
+      return null;
+    }
+    return (await callback(
+      parsed,
+      ControlCallbackContext(cancellation: cancellation),
+    )).toJson();
+  }
+
+  Future<JsonMap?> _handlePermissionRequest(
+    JsonMap request,
+    ControlCallbackCancellation cancellation,
+  ) async {
     final callback = options.canUseTool;
     if (callback == null) {
       throw const ControlProtocolException(
@@ -276,6 +393,7 @@ final class ControlChannel {
                 .toList(growable: false)
           : const [],
       toolUseId: optionalString(request, 'tool_use_id', 'permission request'),
+      requestId: cancellation.requestId,
       agentId: optionalString(request, 'agent_id', 'permission request'),
       blockedPath: optionalString(
         request,
@@ -287,6 +405,27 @@ final class ControlChannel {
         'decision_reason',
         'permission request',
       ),
+      decisionReasonType: optionalString(
+        request,
+        'decision_reason_type',
+        'permission request',
+      ),
+      classifierApprovable: optionalBool(
+        request,
+        'classifier_approvable',
+        'permission request',
+      ),
+      suppressAlwaysAllowRule: optionalBool(
+        request,
+        'suppress_always_allow_rule',
+        'permission request',
+      ),
+      requiresUserInteraction: optionalBool(
+        request,
+        'requires_user_interaction',
+        'permission request',
+      ),
+      matchedAskRule: _matchedAskRule(request['matched_ask_rule']),
       title: optionalString(request, 'title', 'permission request'),
       displayName: optionalString(
         request,
@@ -294,30 +433,49 @@ final class ControlChannel {
         'permission request',
       ),
       description: optionalString(request, 'description', 'permission request'),
+      cancellation: cancellation,
     );
     final result = await callback(
       requiredString(request, 'tool_name', 'permission request'),
       originalInput,
       context,
     );
+    if (result == null) return null;
     return switch (result) {
-      PermissionAllowed(:final updatedInput, :final updatedPermissions) => {
-        'behavior': 'allow',
-        'updatedInput': updatedInput ?? originalInput,
-        if (updatedPermissions != null)
-          'updatedPermissions': updatedPermissions
-              .map((update) => update.toJson())
-              .toList(growable: false),
-      },
-      PermissionDenied(:final message, :final shouldInterrupt) => {
-        'behavior': 'deny',
-        'message': message,
-        if (shouldInterrupt) 'interrupt': true,
-      },
+      PermissionAllowed(
+        :final updatedInput,
+        :final updatedPermissions,
+        :final decisionClassification,
+      ) =>
+        {
+          'behavior': 'allow',
+          'updatedInput': updatedInput ?? originalInput,
+          if (updatedPermissions != null)
+            'updatedPermissions': updatedPermissions
+                .map((update) => update.toJson())
+                .toList(growable: false),
+          if (decisionClassification != null)
+            'decisionClassification': decisionClassification.wireValue,
+        },
+      PermissionDenied(
+        :final message,
+        :final shouldInterrupt,
+        :final decisionClassification,
+      ) =>
+        {
+          'behavior': 'deny',
+          'message': message,
+          if (shouldInterrupt) 'interrupt': true,
+          if (decisionClassification != null)
+            'decisionClassification': decisionClassification.wireValue,
+        },
     };
   }
 
-  Future<JsonMap> _handleHookRequest(JsonMap request) async {
+  Future<JsonMap> _handleHookRequest(
+    JsonMap request,
+    ControlCallbackCancellation cancellation,
+  ) async {
     final callbackId = requiredString(request, 'callback_id', 'hook callback');
     final callback = _hookCallbacks[callbackId];
     if (callback == null) {
@@ -331,19 +489,16 @@ final class ControlChannel {
     final output = await callback(
       input,
       optionalString(request, 'tool_use_id', 'hook callback'),
+      ControlCallbackContext(cancellation: cancellation),
     );
     return output.toJson();
   }
 
   Future<JsonMap> _handleMcpRequest(JsonMap request) async {
     final serverName = requiredString(request, 'server_name', 'MCP request');
-    final servers = switch (options.mcp) {
-      McpServers(:final servers) => servers,
-      _ => const <String, McpServerConfig>{},
-    };
-    final server = servers[serverName];
+    final server = _sdkMcpServers[serverName];
     final message = asJsonMap(request['message'], 'MCP request message');
-    final response = server is SdkMcpServer
+    final response = server != null
         ? await server.handle(message)
         : <String, Object?>{
             'jsonrpc': '2.0',
@@ -388,8 +543,35 @@ final class ControlChannel {
   }
 
   /// Requests interruption of the active turn.
-  Future<void> interrupt() async {
-    await sendControlRequest({'subtype': 'interrupt'});
+  Future<ClaudeInterruptReceipt> interrupt({bool cancelQueued = false}) async =>
+      ClaudeInterruptReceipt.fromJson(
+        await sendControlRequest({
+          'subtype': 'interrupt',
+          if (cancelQueued) 'cancel_queued': true,
+        }),
+      );
+
+  /// Returns currently supported slash commands.
+  Future<List<JsonMap>> supportedCommands() async {
+    final latest = _latestCommands;
+    if (latest != null) return List<JsonMap>.unmodifiable(latest);
+    return _objectList(
+      _initializationResult?['commands'],
+      'initialize.commands',
+    );
+  }
+
+  /// Returns currently supported agents.
+  Future<List<JsonMap>> supportedAgents() async {
+    return _objectList(_initializationResult?['agents'], 'initialize.agents');
+  }
+
+  /// Applies session-scoped CLI [settings].
+  Future<void> applyFlagSettings(ClaudeFlagSettings settings) async {
+    await sendControlRequest({
+      'subtype': 'apply_flag_settings',
+      'settings': settings.toJson(),
+    });
   }
 
   /// Changes the active permission [mode].
@@ -400,16 +582,41 @@ final class ControlChannel {
     });
   }
 
+  /// Tightens or clears the permission policy for one MCP server.
+  Future<McpPermissionModeOverrideResult> setMcpPermissionModeOverride(
+    String serverName,
+    McpPermissionModeOverride? mode,
+  ) async => McpPermissionModeOverrideResult.fromJson(
+    await sendControlRequest({
+      'subtype': 'set_mcp_permission_mode_override',
+      'serverName': serverName,
+      'mode': mode?.wireValue,
+    }),
+  );
+
   /// Changes the active [model], or restores the default when `null`.
   Future<void> setModel(String? model) async {
     await sendControlRequest({'subtype': 'set_model', 'model': model});
   }
 
   /// Rewinds checkpointed files to [userMessageId].
-  Future<void> rewindFiles(String userMessageId) async {
+  Future<RewindFilesResult> rewindFiles(
+    String userMessageId, {
+    bool dryRun = false,
+  }) async => RewindFilesResult.fromJson(
     await sendControlRequest({
       'subtype': 'rewind_files',
       'user_message_id': userMessageId,
+      if (dryRun) 'dry_run': true,
+    }),
+  );
+
+  /// Seeds the runtime's file-read state for subsequent edit validation.
+  Future<void> seedReadState(String path, int modifiedAtMilliseconds) async {
+    await sendControlRequest({
+      'subtype': 'seed_read_state',
+      'path': path,
+      'mtime': modifiedAtMilliseconds,
     });
   }
 
@@ -433,9 +640,48 @@ final class ControlChannel {
     });
   }
 
+  /// Replaces the dynamically managed MCP servers.
+  Future<McpSetServersResult> setMcpServers(
+    Map<String, McpServerConfig> servers,
+  ) async {
+    if (servers.keys.any((name) => name.isEmpty)) {
+      throw ArgumentError.value(servers, 'servers', 'names must not be empty');
+    }
+    _sdkMcpServers
+      ..clear()
+      ..addEntries(
+        servers.entries
+            .where((entry) => entry.value is SdkMcpServer)
+            .map((entry) => MapEntry(entry.key, entry.value as SdkMcpServer)),
+      );
+    final serializable = servers.map(
+      (name, config) => MapEntry(
+        name,
+        config is SdkMcpServer
+            ? <String, Object?>{'type': 'sdk', 'name': name}
+            : config.toJson(),
+      ),
+    );
+    return McpSetServersResult.fromJson(
+      await sendControlRequest({
+        'subtype': 'mcp_set_servers',
+        'servers': serializable,
+      }),
+    );
+  }
+
   /// Stops a delegated task.
   Future<void> stopTask(String taskId) async {
     await sendControlRequest({'subtype': 'stop_task', 'task_id': taskId});
+  }
+
+  /// Backgrounds one or all foreground tasks.
+  Future<bool> backgroundTasks([String? toolUseId]) async {
+    final response = await sendControlRequest({
+      'subtype': 'background_tasks',
+      'tool_use_id': ?toolUseId,
+    });
+    return optionalBool(response, 'backgrounded', 'background tasks') ?? true;
   }
 
   /// Gets current MCP connection state.
@@ -446,6 +692,47 @@ final class ControlChannel {
   Future<ContextUsage> getContextUsage() async => ContextUsage.fromJson(
     await sendControlRequest({'subtype': 'get_context_usage'}),
   );
+
+  /// Gets the experimental structured usage snapshot.
+  Future<ClaudeUsageSnapshot> getUsage() async => ClaudeUsageSnapshot.fromJson(
+    await sendControlRequest({'subtype': 'get_usage'}),
+  );
+
+  /// Reads one file through the runtime's permission-gated filesystem.
+  Future<ClaudeReadFileResult?> readFile(
+    String path, {
+    int? maxBytes,
+    ClaudeReadFileEncoding encoding = ClaudeReadFileEncoding.utf8,
+  }) async {
+    if (maxBytes != null && maxBytes <= 0) {
+      throw ArgumentError.value(maxBytes, 'maxBytes', 'must be positive');
+    }
+    try {
+      return ClaudeReadFileResult.fromJson(
+        await sendControlRequest({
+          'subtype': 'read_file',
+          'path': path,
+          'max_bytes': ?maxBytes,
+          if (encoding == ClaudeReadFileEncoding.base64)
+            'encoding': encoding.wireValue,
+        }),
+      );
+    } on ControlProtocolException {
+      return null;
+    }
+  }
+
+  /// Reloads plugins and returns refreshed session components.
+  Future<ReloadPluginsResult> reloadPlugins() async =>
+      ReloadPluginsResult.fromJson(
+        await sendControlRequest({'subtype': 'reload_plugins'}),
+      );
+
+  /// Reloads skills and returns the refreshed list.
+  Future<ReloadSkillsResult> reloadSkills() async =>
+      ReloadSkillsResult.fromJson(
+        await sendControlRequest({'subtype': 'reload_skills'}),
+      );
 
   /// Writes a user input frame.
   Future<void> sendInput(JsonMap input) =>
@@ -515,6 +802,10 @@ final class ControlChannel {
       const CliConnectionException('CLI output closed during control request'),
       StackTrace.current,
     );
+    for (final cancellation in _incomingCancellations.values) {
+      cancellation.cancel();
+    }
+    _incomingCancellations.clear();
   }
 
   void _completePending(Object error, StackTrace stackTrace) {
@@ -540,5 +831,33 @@ final class ControlChannel {
     );
     if (!_messages.isClosed) unawaited(_messages.close());
     await transport.close();
+  }
+
+  List<JsonMap> _objectList(Object? raw, String context) {
+    if (raw == null) return const <JsonMap>[];
+    if (raw is! List<Object?>) {
+      throw ControlProtocolException('$context must be an array');
+    }
+    return List<JsonMap>.unmodifiable(
+      raw.map((value) => asJsonMap(value, '$context item')),
+    );
+  }
+
+  MatchedAskRule? _matchedAskRule(Object? value) {
+    if (value == null) return null;
+    final rule = asJsonMap(value, 'permission matched ask rule');
+    return MatchedAskRule(
+      source: requiredString(rule, 'source', 'permission matched ask rule'),
+      toolName: requiredString(
+        rule,
+        'tool_name',
+        'permission matched ask rule',
+      ),
+      ruleContent: optionalString(
+        rule,
+        'rule_content',
+        'permission matched ask rule',
+      ),
+    );
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'elicitation.dart';
 import 'json.dart';
 
 /// How the CLI evaluates tool permissions for a session.
@@ -68,7 +69,10 @@ enum PermissionUpdateDestination {
   localSettings('localSettings'),
 
   /// The current in-memory session.
-  session('session');
+  session('session'),
+
+  /// Permission supplied directly through a CLI argument.
+  cliArgument('cliArg');
 
   const PermissionUpdateDestination(this.wireValue);
 
@@ -81,6 +85,42 @@ enum PermissionUpdateDestination {
         orElse: () =>
             throw FormatException('Unknown permission destination: $value'),
       );
+}
+
+/// Classification of a host permission decision for telemetry.
+enum PermissionDecisionClassification {
+  /// The user allowed this invocation only.
+  userTemporary('user_temporary'),
+
+  /// The user chose a persistent allow decision.
+  userPermanent('user_permanent'),
+
+  /// The user rejected the invocation.
+  userReject('user_reject');
+
+  const PermissionDecisionClassification(this.wireValue);
+
+  /// Control-protocol value.
+  final String wireValue;
+}
+
+/// Ask rule that forced a permission prompt while preserving a richer reason.
+final class MatchedAskRule {
+  /// Creates a matched ask rule.
+  const MatchedAskRule({
+    required this.source,
+    required this.toolName,
+    this.ruleContent,
+  });
+
+  /// Settings source that supplied the rule.
+  final String source;
+
+  /// Tool matched by the rule.
+  final String toolName;
+
+  /// Optional rule expression.
+  final String? ruleContent;
 }
 
 /// A tool name and optional rule expression.
@@ -308,12 +348,19 @@ final class ToolPermissionContext {
   ToolPermissionContext({
     List<PermissionUpdate> suggestions = const [],
     this.toolUseId,
+    this.requestId,
     this.agentId,
     this.blockedPath,
     this.decisionReason,
+    this.decisionReasonType,
+    this.classifierApprovable,
+    this.suppressAlwaysAllowRule,
+    this.matchedAskRule,
+    this.requiresUserInteraction,
     this.title,
     this.displayName,
     this.description,
+    this.cancellation,
   }) : suggestions = List<PermissionUpdate>.unmodifiable(suggestions);
 
   /// Permission updates proposed by the CLI.
@@ -321,6 +368,9 @@ final class ToolPermissionContext {
 
   /// Identifier of the tool invocation.
   final String? toolUseId;
+
+  /// Incoming control request identifier.
+  final String? requestId;
 
   /// Subagent identifier when the invocation belongs to a subagent.
   final String? agentId;
@@ -331,6 +381,21 @@ final class ToolPermissionContext {
   /// Reason a previous rule or hook requested a decision.
   final String? decisionReason;
 
+  /// Structured reason discriminator for the permission prompt.
+  final String? decisionReasonType;
+
+  /// Whether every safety check may be classifier-approved.
+  final bool? classifierApprovable;
+
+  /// Whether a persistent allow affordance must be hidden.
+  final bool? suppressAlwaysAllowRule;
+
+  /// Ask rule that forced this prompt, when reported separately.
+  final MatchedAskRule? matchedAskRule;
+
+  /// Whether the tool's own UI must collect the decision.
+  final bool? requiresUserInteraction;
+
   /// Full prompt text suitable for a user-facing dialog.
   final String? title;
 
@@ -339,6 +404,12 @@ final class ToolPermissionContext {
 
   /// Human-readable detail for the permission UI.
   final String? description;
+
+  /// Cooperative cancellation signal for this permission interaction.
+  ///
+  /// This is present for runtime-originated callbacks and absent when a
+  /// context is constructed directly by an SDK consumer.
+  final ControlCallbackCancellation? cancellation;
 }
 
 /// Result returned by a [CanUseTool] callback.
@@ -352,6 +423,7 @@ final class PermissionAllowed extends PermissionResult {
   PermissionAllowed({
     JsonMap? updatedInput,
     List<PermissionUpdate>? updatedPermissions,
+    this.decisionClassification,
   }) : updatedInput = updatedInput == null
            ? null
            : immutableJsonMap(updatedInput),
@@ -364,23 +436,33 @@ final class PermissionAllowed extends PermissionResult {
 
   /// Permission updates to apply after allowing the call.
   final List<PermissionUpdate>? updatedPermissions;
+
+  /// How this decision was reached.
+  final PermissionDecisionClassification? decisionClassification;
 }
 
 /// Denies a tool call.
 final class PermissionDenied extends PermissionResult {
   /// Creates a denial result.
-  const PermissionDenied({required this.message, this.shouldInterrupt = false});
+  const PermissionDenied({
+    required this.message,
+    this.shouldInterrupt = false,
+    this.decisionClassification,
+  });
 
   /// Explanation delivered to the agent.
   final String message;
 
   /// Whether the current run should also be interrupted.
   final bool shouldInterrupt;
+
+  /// How this decision was reached.
+  final PermissionDecisionClassification? decisionClassification;
 }
 
 /// Decides a tool call that reached the CLI's interactive permission step.
 typedef CanUseTool =
-    Future<PermissionResult> Function(
+    Future<PermissionResult?> Function(
       String toolName,
       JsonMap input,
       ToolPermissionContext context,

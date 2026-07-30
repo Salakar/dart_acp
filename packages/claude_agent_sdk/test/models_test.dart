@@ -32,6 +32,12 @@ void main() {
         throwsA(isA<FormatException>()),
       );
     });
+
+    test('encodes turn identity and steering priority', () {
+      final input = UserInput.text('steer', uuid: 'turn-uuid', priority: 'now');
+      expect(input.toJson(), containsPair('uuid', 'turn-uuid'));
+      expect(input.toJson(), containsPair('priority', 'now'));
+    });
   });
 
   group('permissions', () {

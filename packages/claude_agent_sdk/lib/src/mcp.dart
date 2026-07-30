@@ -10,6 +10,32 @@ sealed class McpServerConfig {
   JsonMap toJson();
 }
 
+/// Permission policy for one tool exposed by an external MCP server.
+final class McpServerToolPolicy {
+  /// Creates an MCP tool policy.
+  const McpServerToolPolicy({
+    required this.name,
+    this.permissionPolicy,
+    this.organizationMaximumPermission,
+  });
+
+  /// Tool name.
+  final String name;
+
+  /// Open-set policy (`always_allow`, `always_ask`, or `always_deny`).
+  final String? permissionPolicy;
+
+  /// Organization ceiling (`allow`, `ask`, or `blocked`).
+  final String? organizationMaximumPermission;
+
+  JsonMap _toJson() => {
+    'name': name,
+    if (permissionPolicy != null) 'permission_policy': permissionPolicy,
+    if (organizationMaximumPermission != null)
+      'org_max_permission': organizationMaximumPermission,
+  };
+}
+
 /// Starts an external MCP server over stdio.
 final class McpStdioServerConfig extends McpServerConfig {
   /// Creates a stdio MCP configuration.
@@ -17,6 +43,8 @@ final class McpStdioServerConfig extends McpServerConfig {
     required this.command,
     List<String> arguments = const [],
     Map<String, String> environment = const {},
+    this.timeout,
+    this.alwaysLoad,
   }) : arguments = List<String>.unmodifiable(arguments),
        environment = Map<String, String>.unmodifiable(environment) {
     if (command.isEmpty) {
@@ -33,12 +61,20 @@ final class McpStdioServerConfig extends McpServerConfig {
   /// Extra child environment values.
   final Map<String, String> environment;
 
+  /// Per-call timeout.
+  final Duration? timeout;
+
+  /// Whether tools are eagerly loaded into every prompt.
+  final bool? alwaysLoad;
+
   @override
   JsonMap toJson() => {
     'type': 'stdio',
     'command': command,
     if (arguments.isNotEmpty) 'args': arguments,
     if (environment.isNotEmpty) 'env': environment,
+    if (timeout != null) 'timeout': timeout!.inMilliseconds,
+    if (alwaysLoad != null) 'alwaysLoad': alwaysLoad,
   };
 }
 
@@ -48,7 +84,11 @@ final class McpSseServerConfig extends McpServerConfig {
   McpSseServerConfig({
     required this.url,
     Map<String, String> headers = const {},
-  }) : headers = Map<String, String>.unmodifiable(headers) {
+    List<McpServerToolPolicy> tools = const [],
+    this.timeout,
+    this.alwaysLoad,
+  }) : headers = Map<String, String>.unmodifiable(headers),
+       tools = List<McpServerToolPolicy>.unmodifiable(tools) {
     if (url.isEmpty) throw ArgumentError.value(url, 'url', 'must not be empty');
   }
 
@@ -58,11 +98,24 @@ final class McpSseServerConfig extends McpServerConfig {
   /// Request headers.
   final Map<String, String> headers;
 
+  /// Per-tool permission policies.
+  final List<McpServerToolPolicy> tools;
+
+  /// Per-call timeout.
+  final Duration? timeout;
+
+  /// Whether tools are eagerly loaded into every prompt.
+  final bool? alwaysLoad;
+
   @override
   JsonMap toJson() => {
     'type': 'sse',
     'url': url,
     if (headers.isNotEmpty) 'headers': headers,
+    if (tools.isNotEmpty)
+      'tools': tools.map((tool) => tool._toJson()).toList(growable: false),
+    if (timeout != null) 'timeout': timeout!.inMilliseconds,
+    if (alwaysLoad != null) 'alwaysLoad': alwaysLoad,
   };
 }
 
@@ -72,7 +125,11 @@ final class McpHttpServerConfig extends McpServerConfig {
   McpHttpServerConfig({
     required this.url,
     Map<String, String> headers = const {},
-  }) : headers = Map<String, String>.unmodifiable(headers) {
+    List<McpServerToolPolicy> tools = const [],
+    this.timeout,
+    this.alwaysLoad,
+  }) : headers = Map<String, String>.unmodifiable(headers),
+       tools = List<McpServerToolPolicy>.unmodifiable(tools) {
     if (url.isEmpty) throw ArgumentError.value(url, 'url', 'must not be empty');
   }
 
@@ -82,11 +139,24 @@ final class McpHttpServerConfig extends McpServerConfig {
   /// Request headers.
   final Map<String, String> headers;
 
+  /// Per-tool permission policies.
+  final List<McpServerToolPolicy> tools;
+
+  /// Per-call timeout.
+  final Duration? timeout;
+
+  /// Whether tools are eagerly loaded into every prompt.
+  final bool? alwaysLoad;
+
   @override
   JsonMap toJson() => {
     'type': 'http',
     'url': url,
     if (headers.isNotEmpty) 'headers': headers,
+    if (tools.isNotEmpty)
+      'tools': tools.map((tool) => tool._toJson()).toList(growable: false),
+    if (timeout != null) 'timeout': timeout!.inMilliseconds,
+    if (alwaysLoad != null) 'alwaysLoad': alwaysLoad,
   };
 }
 
@@ -516,7 +586,8 @@ final class McpServerStatus {
   /// Tools currently advertised by the server.
   final List<McpToolInfo> tools;
 
-  static McpServerStatus _fromJson(JsonMap json) {
+  /// Decodes one server status.
+  factory McpServerStatus.fromJson(JsonMap json) {
     final rawInfo = optionalMap(json, 'serverInfo', 'MCP server status');
     final rawTools = json['tools'];
     return McpServerStatus(
@@ -575,13 +646,53 @@ final class McpStatus {
     return McpStatus(
       values
           .map(
-            (value) => McpServerStatus._fromJson(
-              asJsonMap(value, 'MCP server status'),
-            ),
+            (value) =>
+                McpServerStatus.fromJson(asJsonMap(value, 'MCP server status')),
           )
           .toList(growable: false),
     );
   }
+}
+
+/// Result of replacing dynamically managed MCP servers.
+final class McpSetServersResult {
+  /// Decodes a dynamic MCP update.
+  McpSetServersResult.fromJson(JsonMap json)
+    : added = _stringValues(json['added'], 'MCP servers added'),
+      removed = _stringValues(json['removed'], 'MCP servers removed'),
+      errors = _stringMap(json['errors'], 'MCP server errors'),
+      raw = immutableJsonMap(json);
+
+  /// Newly added server names.
+  final List<String> added;
+
+  /// Removed server names.
+  final List<String> removed;
+
+  /// Connection errors keyed by server name.
+  final Map<String, String> errors;
+
+  /// Complete forward-compatible response.
+  final JsonMap raw;
+}
+
+List<String> _stringValues(Object? value, String context) {
+  if (value == null) return const <String>[];
+  if (value is! List<Object?> || value.any((item) => item is! String)) {
+    throw FormatException('$context must contain strings');
+  }
+  return List<String>.unmodifiable(value.cast<String>());
+}
+
+Map<String, String> _stringMap(Object? value, String context) {
+  if (value == null) return const <String, String>{};
+  final json = asJsonMap(value, context);
+  if (json.values.any((item) => item is! String)) {
+    throw FormatException('$context must contain string values');
+  }
+  return Map<String, String>.unmodifiable(
+    json.map((key, value) => MapEntry(key, value! as String)),
+  );
 }
 
 extension<T> on Iterable<T> {

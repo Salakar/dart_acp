@@ -1,0 +1,31 @@
+name: dart_acp_claude
+description: A typed ACP client and adapter for Claude Code.
+version: 0.1.0
+repository: https://github.com/Salakar/dart_acp.git
+issue_tracker: https://github.com/Salakar/dart_acp/issues
+homepage: https://github.com/Salakar/dart_acp.git
+topics:
+  - acp
+  - ai
+  - agents
+  - claude
+  - tools
+screenshots:
+  - description: The dart_acp_claude package logo.
+    path: assets/logo.png
+
+environment:
+  sdk: ^3.10.0
+
+executables:
+  dart_acp_claude: dart_acp_claude
+
+dependencies:
+  claude_agent_sdk: ^0.1.0
+  dart_acp_sdk: ^0.1.0
+  path: ^1.9.1
+
+dev_dependencies:
+  benchmark_harness: ^2.4.0
+  lints: ^6.1.0
+  test: ^1.30.0

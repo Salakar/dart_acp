@@ -58,6 +58,8 @@ Future<CliLaunchPlan> createCliLaunchPlan(
     'CLAUDE_AGENT_SDK_VERSION': packageVersion,
     if (options.enableFileCheckpointing)
       'CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING': 'true',
+    if (options.toolConfig?.questionPreviewFormat case final format?)
+      'CLAUDE_CODE_QUESTION_PREVIEW_FORMAT': format.name,
     if (options.workingDirectory != null) 'PWD': options.workingDirectory!,
   };
   return CliLaunchPlan(
@@ -153,6 +155,10 @@ Future<List<String>> buildCliArguments(
       arguments.addAll(['--system-prompt', '']);
     case TextSystemPrompt(:final text):
       arguments.addAll(['--system-prompt', text]);
+    case BlockSystemPrompt():
+      // Block prompts travel in the initialize request so their cache
+      // boundary remains structured.
+      arguments.addAll(['--system-prompt', '']);
     case FileSystemPrompt(:final path):
       arguments.addAll(['--system-prompt-file', path]);
     case ClaudeCodeSystemPrompt(:final append):
@@ -184,6 +190,7 @@ Future<List<String>> buildCliArguments(
     arguments.addAll(['--task-budget', '${options.taskBudget!.totalTokens}']);
   }
   if (options.model != null) arguments.addAll(['--model', options.model!]);
+  if (options.agent != null) arguments.addAll(['--agent', options.agent!]);
   if (options.fallbackModel != null) {
     arguments.addAll(['--fallback-model', options.fallbackModel!]);
   }
@@ -202,10 +209,21 @@ Future<List<String>> buildCliArguments(
   if (options.permissionMode != null) {
     arguments.addAll(['--permission-mode', options.permissionMode!.wireValue]);
   }
+  if (options.allowDangerouslySkipPermissions) {
+    arguments.add('--allow-dangerously-skip-permissions');
+  }
   if (options.continueSession) arguments.add('--continue');
   if (options.resume != null) {
     validateWindowsCliValue('resume', options.resume!, windows: windows);
     arguments.add('--resume=${options.resume}');
+  }
+  if (options.resumeSessionAt != null) {
+    validateWindowsCliValue(
+      'resumeSessionAt',
+      options.resumeSessionAt!,
+      windows: windows,
+    );
+    arguments.add('--resume-session-at=${options.resumeSessionAt}');
   }
   if (options.sessionId != null) {
     validateWindowsCliValue('sessionId', options.sessionId!, windows: windows);
@@ -214,6 +232,12 @@ Future<List<String>> buildCliArguments(
   final settings = await buildSettingsValue(options);
   if (settings != null && settings.isNotEmpty) {
     arguments.addAll(['--settings', settings]);
+  }
+  if (options.managedSettings != null) {
+    arguments.addAll([
+      '--managed-settings',
+      jsonEncode(options.managedSettings),
+    ]);
   }
   for (final directory in options.addDirectories) {
     arguments.addAll(['--add-dir', directory]);
@@ -224,14 +248,20 @@ Future<List<String>> buildCliArguments(
     case McpConfigSource(:final value):
       arguments.addAll(['--mcp-config', value]);
     case McpServers(:final servers):
-      arguments.addAll([
-        '--mcp-config',
-        jsonEncode({
-          'mcpServers': servers.map(
-            (name, config) => MapEntry(name, config.toJson()),
-          ),
-        }),
-      ]);
+      final processServers = servers.entries
+          .where((entry) => entry.value is! SdkMcpServer)
+          .toList(growable: false);
+      if (processServers.isNotEmpty) {
+        arguments.addAll([
+          '--mcp-config',
+          jsonEncode({
+            'mcpServers': {
+              for (final entry in processServers)
+                entry.key: entry.value.toJson(),
+            },
+          }),
+        ]);
+      }
   }
   if (options.includePartialMessages) {
     arguments.add('--include-partial-messages');
@@ -239,6 +269,7 @@ Future<List<String>> buildCliArguments(
   if (options.includeHookEvents) arguments.add('--include-hook-events');
   if (options.strictMcpConfig) arguments.add('--strict-mcp-config');
   if (options.forkSession) arguments.add('--fork-session');
+  if (!options.persistSession) arguments.add('--no-session-persistence');
   if (options.sessionStore != null) arguments.add('--session-mirror');
   if (settingSources != null) {
     arguments.add(
@@ -246,7 +277,15 @@ Future<List<String>> buildCliArguments(
     );
   }
   for (final plugin in options.plugins) {
-    arguments.addAll(['--plugin-dir', plugin.path]);
+    arguments.addAll([
+      plugin.skipMcpDiscovery ? '--plugin-dir-no-mcp' : '--plugin-dir',
+      plugin.path,
+    ]);
+  }
+  if (options.debugFile != null) {
+    arguments.addAll(['--debug-file', options.debugFile!]);
+  } else if (options.debug) {
+    arguments.add('--debug');
   }
   for (final entry in options.extraArguments.entries) {
     final flag = '--${entry.key}';
@@ -314,9 +353,20 @@ Future<List<String>> buildCliArguments(
 
 /// Merges explicit settings and SDK sandbox settings into one CLI value.
 Future<String?> buildSettingsValue(ClaudeAgentOptions options) async {
-  if (options.settings == null && options.sandbox == null) return null;
-  if (options.sandbox == null) return options.settings;
+  if (options.settings == null &&
+      options.inlineSettings == null &&
+      options.sandbox == null) {
+    return null;
+  }
+  if (options.sandbox == null) {
+    return options.inlineSettings == null
+        ? options.settings
+        : jsonEncode(options.inlineSettings);
+  }
   var object = <String, Object?>{};
+  if (options.inlineSettings != null) {
+    object = <String, Object?>{...options.inlineSettings!};
+  }
   final settings = options.settings?.trim();
   if (settings != null && settings.isNotEmpty) {
     try {

@@ -278,6 +278,26 @@ void main() {
     expect(usage.apiUsage, containsPair('inputTokens', 4));
   });
 
+  test('model discovery exposes every published capability flag', () {
+    final model = ClaudeModelInfo.fromJson(<String, Object?>{
+      'value': 'sonnet',
+      'resolvedModel': 'claude-sonnet-5',
+      'displayName': 'Claude Sonnet',
+      'description': 'Balanced',
+      'supportsEffort': true,
+      'supportedEffortLevels': <Object?>['low', 'high'],
+      'supportsAdaptiveThinking': true,
+      'supportsFastMode': true,
+      'supportsAutoMode': true,
+    });
+
+    expect(model.supportsEffort, isTrue);
+    expect(model.supportedEffortLevels, <String>['low', 'high']);
+    expect(model.supportsAdaptiveThinking, isTrue);
+    expect(model.supportsFastMode, isTrue);
+    expect(model.supportsAutoMode, isTrue);
+  });
+
   test('sandbox and agent option objects cover every current field', () {
     final network = SandboxNetworkConfig(
       allowedDomains: const ['allowed.example'],

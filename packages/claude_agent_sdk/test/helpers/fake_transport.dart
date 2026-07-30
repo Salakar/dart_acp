@@ -71,7 +71,93 @@ final class FakeTransport implements Transport {
         ? request['subtype']
         : null;
     final response = switch (subtype) {
-      'initialize' => <String, Object?>{'commands': <Object?>[]},
+      'initialize' => <String, Object?>{
+        'models': <Object?>[
+          <String, Object?>{
+            'value': 'test-model',
+            'displayName': 'Test Model',
+            'description': 'For tests',
+            'supportsAutoMode': true,
+            'supportsEffort': true,
+            'supportedEffortLevels': <Object?>['low', 'high'],
+          },
+        ],
+        'commands': <Object?>[
+          <String, Object?>{
+            'name': 'review',
+            'description': 'Review changes',
+            'argumentHint': <Object?>['path', 'focus'],
+          },
+        ],
+        'agents': <Object?>[
+          <String, Object?>{'name': 'reviewer', 'description': 'Reviews code'},
+        ],
+        'account': <String, Object?>{
+          'email': 'sdk@example.com',
+          'apiProvider': 'firstParty',
+        },
+        'output_style': 'default',
+        'available_output_styles': <Object?>['default'],
+      },
+      'supported_commands' => <String, Object?>{
+        'commands': <Object?>[
+          <String, Object?>{
+            'name': 'review',
+            'description': 'Review changes',
+            'argumentHint': <Object?>['path', 'focus'],
+          },
+        ],
+      },
+      'supported_agents' => <String, Object?>{
+        'agents': <Object?>[
+          <String, Object?>{'name': 'reviewer', 'description': 'Reviews code'},
+        ],
+      },
+      'interrupt' => <String, Object?>{
+        'still_queued': <Object?>['queued-id'],
+      },
+      'rewind_files' => <String, Object?>{
+        'canRewind': true,
+        'filesChanged': <Object?>[],
+      },
+      'set_mcp_permission_mode_override' => <String, Object?>{
+        'warning': 'test warning',
+      },
+      'mcp_set_servers' => <String, Object?>{
+        'added': <Object?>['dynamic'],
+        'removed': <Object?>[],
+        'errors': <String, Object?>{},
+      },
+      'background_tasks' => <String, Object?>{'backgrounded': true},
+      'get_usage' => <String, Object?>{
+        'session': <String, Object?>{'total_cost_usd': 0.1},
+        'subscription_type': 'pro',
+        'rate_limits_available': true,
+        'rate_limits': <String, Object?>{},
+      },
+      'read_file' => <String, Object?>{
+        'contents': 'aGVsbG8=',
+        'absPath': '/tmp/example.png',
+        'encoding': 'base64',
+      },
+      'reload_plugins' => <String, Object?>{
+        'commands': <Object?>[],
+        'agents': <Object?>[],
+        'plugins': <Object?>[
+          <String, Object?>{
+            'name': 'test',
+            'path': '/tmp/plugin',
+            'version': '1.2.3',
+          },
+        ],
+        'mcpServers': <Object?>[],
+        'error_count': 0,
+      },
+      'reload_skills' => <String, Object?>{
+        'skills': <Object?>[
+          <String, Object?>{'name': 'review', 'description': 'Review'},
+        ],
+      },
       'mcp_status' => <String, Object?>{'mcpServers': <Object?>[]},
       'get_context_usage' => <String, Object?>{
         'categories': <Object?>[],

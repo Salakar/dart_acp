@@ -56,6 +56,45 @@ void main() {
     });
   });
 
+  group('startup', () {
+    test(
+      'pre-warms once and sends the prompt to the initialized process',
+      () async {
+        final transport = FakeTransport();
+        transport.onWrite = (message) {
+          transport.autoRespondToControl(message);
+          if (message['type'] == 'user') {
+            scheduleMicrotask(() {
+              transport.emit(_assistant);
+              transport.emit(_result);
+            });
+          }
+        };
+
+        final warm = await startup(
+          transport: transport,
+          initializeTimeout: const Duration(seconds: 2),
+        );
+        expect(
+          transport.written.where(
+            (message) =>
+                message['type'] == 'control_request' &&
+                (message['request'] as Map)['subtype'] == 'initialize',
+          ),
+          hasLength(1),
+        );
+
+        final messages = await warm.query('ready').toList();
+        expect(messages, hasLength(2));
+        expect(transport.closed, isTrue);
+        expect(
+          () => warm.query('again').drain<void>(),
+          throwsA(isA<CliConnectionException>()),
+        );
+      },
+    );
+  });
+
   group('ClaudeAgentClient', () {
     late FakeTransport transport;
     late ClaudeAgentClient client;
@@ -88,7 +127,7 @@ void main() {
     });
 
     test('routes outgoing control operations', () async {
-      Future<void> checked(String name, Future<void> operation) =>
+      Future<void> checked(String name, Future<Object?> operation) =>
           operation.timeout(
             const Duration(seconds: 2),
             onTimeout: () => throw TimeoutException(name),
@@ -126,6 +165,45 @@ void main() {
       );
     });
 
+    test(
+      'exposes typed initialization, discovery, flags, and receipt',
+      () async {
+        final initialization = client.initializationResult;
+        expect(initialization.models.single.value, 'test-model');
+        expect(initialization.models.single.supportedEffortLevels, [
+          'low',
+          'high',
+        ]);
+
+        final commands = await client.supportedCommands();
+        final agents = await client.supportedAgents();
+        expect(commands.single.argumentHint, 'path focus');
+        expect(agents.single.name, 'reviewer');
+
+        await client.applyFlagSettings(
+          const ClaudeFlagSettings(
+            effortLevel: EffortLevel.high,
+            clearAgent: true,
+            fastMode: true,
+          ),
+        );
+        final flagRequest = transport.written.lastWhere(
+          (message) =>
+              message['type'] == 'control_request' &&
+              (message['request'] as Map)['subtype'] == 'apply_flag_settings',
+        );
+        expect((flagRequest['request'] as Map)['settings'], <String, Object?>{
+          'effortLevel': 'high',
+          'agent': null,
+          'fastMode': true,
+        });
+
+        final receipt = await client.interrupt();
+        expect(receipt.receiptSupported, isTrue);
+        expect(receipt.stillQueued, ['queued-id']);
+      },
+    );
+
     test('decodes MCP and context status', () async {
       final status = await client.getMcpStatus();
       final context = await client.getContextUsage();
@@ -133,7 +211,106 @@ void main() {
       expect(status.servers, isEmpty);
       expect(context.totalTokens, 10);
       expect(context.percentage, 10);
-      expect(client.serverInfo, containsPair('commands', isEmpty));
+      expect(client.serverInfo, containsPair('commands', isNotEmpty));
+    });
+
+    test('supports current live controls and typed responses', () async {
+      final fresh = await client.reinitialize();
+      expect(fresh.outputStyle, 'default');
+      expect((await client.supportedModels()).single.value, 'test-model');
+      expect((await client.accountInfo())?.email, 'sdk@example.com');
+
+      final override = await client.setMcpPermissionModeOverride(
+        'server',
+        McpPermissionModeOverride.auto,
+      );
+      expect(override.warning, 'test warning');
+
+      final rewind = await client.rewindFiles('message-id', dryRun: true);
+      expect(rewind.canRewind, isTrue);
+      await client.seedReadState('/tmp/file', 123);
+
+      final setServers = await client.setMcpServers({
+        'dynamic': McpHttpServerConfig(url: 'https://example.com/mcp'),
+      });
+      expect(setServers.added, ['dynamic']);
+      expect(await client.backgroundTasks('tool-use'), isTrue);
+
+      final usage = await client.getUsage();
+      expect(usage.subscriptionType, 'pro');
+      final file = await client.readFile(
+        '/tmp/example.png',
+        encoding: ClaudeReadFileEncoding.base64,
+      );
+      expect(file?.encoding, ClaudeReadFileEncoding.base64);
+
+      final plugins = await client.reloadPlugins();
+      expect(plugins.plugins.single.version, '1.2.3');
+      expect((await client.reloadSkills()).skills.single.name, 'review');
+
+      final requests = transport.written
+          .where((message) => message['type'] == 'control_request')
+          .map((message) => message['request']! as Map<Object?, Object?>)
+          .toList();
+      expect(
+        requests.firstWhere(
+          (request) => request['subtype'] == 'rewind_files',
+        )['dry_run'],
+        isTrue,
+      );
+      expect(
+        requests.firstWhere(
+          (request) => request['subtype'] == 'read_file',
+        )['encoding'],
+        'base64',
+      );
+    });
+
+    test('sends complete programmatic-agent initialization', () async {
+      await client.close();
+      transport = FakeTransport();
+      transport.onWrite = transport.autoRespondToControl;
+      client = ClaudeAgentClient(
+        options: ClaudeAgentOptions(
+          systemPrompt: SystemPrompt.blocks([
+            'static',
+            systemPromptDynamicBoundary,
+            'dynamic',
+          ]),
+          agents: {
+            'reviewer': AgentDefinition(
+              description: 'Reviews code',
+              prompt: 'Review carefully',
+            ),
+          },
+          toolAliases: const {'Bash': 'mcp__workspace__bash'},
+          title: 'Review session',
+          planModeInstructions: 'Produce a review plan.',
+          forwardSubagentText: true,
+          promptSuggestions: true,
+          agentProgressSummaries: true,
+        ),
+        transport: transport,
+      );
+      await client.connect();
+
+      final initialize = transport.written.firstWhere(
+        (message) =>
+            message['type'] == 'control_request' &&
+            (message['request'] as Map)['subtype'] == 'initialize',
+      );
+      final request = initialize['request']! as Map<Object?, Object?>;
+      expect(request['agents'], contains('reviewer'));
+      expect(request['systemPrompt'], [
+        'static',
+        systemPromptDynamicBoundary,
+        'dynamic',
+      ]);
+      expect(request['toolAliases'], {'Bash': 'mcp__workspace__bash'});
+      expect(request['title'], 'Review session');
+      expect(request['forwardSubagentText'], isTrue);
+      expect(request['promptSuggestions'], isTrue);
+      expect(request['agentProgressSummaries'], isTrue);
     });
 
     test('fails controls before connection', () async {
@@ -193,6 +370,74 @@ void main() {
   });
 
   group('incoming control requests', () {
+    test('routes elicitation and declared user-dialog callbacks', () async {
+      final transport = FakeTransport();
+      transport.onWrite = transport.autoRespondToControl;
+      final client = ClaudeAgentClient(
+        options: ClaudeAgentOptions(
+          onElicitation: (request, context) async {
+            expect(request.mode, ClaudeElicitationMode.form);
+            expect(request.schema, containsPair('type', 'object'));
+            expect(context.cancellation.isCancelled, isFalse);
+            return ClaudeElicitationResult.accept(<String, Object?>{
+              'answer': 'yes',
+            });
+          },
+          onUserDialog: (request, context) async {
+            expect(request.dialogKind, 'refusal_fallback');
+            return const ClaudeUserDialogResult.completed('retry');
+          },
+          supportedDialogKinds: const <String>['refusal_fallback'],
+        ),
+        transport: transport,
+      );
+      await client.connect();
+
+      transport.emit(<String, Object?>{
+        'type': 'control_request',
+        'request_id': 'elicit-1',
+        'request': <String, Object?>{
+          'subtype': 'mcp_elicitation',
+          'mode': 'form',
+          'message': 'Choose',
+          'requestedSchema': <String, Object?>{'type': 'object'},
+        },
+      });
+      final elicitation = await transport.nextWriteWhere(
+        (value) =>
+            value['type'] == 'control_response' &&
+            (value['response'] as Map)['request_id'] == 'elicit-1',
+      );
+      expect(
+        ((elicitation['response'] as Map)['response'] as Map)['action'],
+        'accept',
+      );
+
+      transport.emit(<String, Object?>{
+        'type': 'control_request',
+        'request_id': 'dialog-1',
+        'request': <String, Object?>{
+          'subtype': 'user_dialog',
+          'kind': 'refusal_fallback',
+          'message': 'Try fallback?',
+        },
+      });
+      final dialog = await transport.nextWriteWhere(
+        (value) =>
+            value['type'] == 'control_response' &&
+            (value['response'] as Map)['request_id'] == 'dialog-1',
+      );
+      expect(
+        ((dialog['response'] as Map)['response'] as Map)['behavior'],
+        'completed',
+      );
+      expect(
+        ((dialog['response'] as Map)['response'] as Map)['result'],
+        'retry',
+      );
+      await client.close();
+    });
+
     test('invokes permission callback', () async {
       final transport = FakeTransport();
       transport.onWrite = transport.autoRespondToControl;
@@ -233,6 +478,7 @@ void main() {
     test('invokes hooks and SDK MCP tools', () async {
       final transport = FakeTransport();
       transport.onWrite = transport.autoRespondToControl;
+      final cancelledHook = Completer<ControlCallbackContext>();
       final server = SdkMcpServer(
         name: 'local',
         tools: [
@@ -251,8 +497,13 @@ void main() {
             HookEvent.preToolUse: [
               HookMatcher(
                 hooks: [
-                  (input, toolUseId) async {
+                  (input, toolUseId, context) async {
                     expect(input, isA<PreToolUseHookInput>());
+                    expect(context.cancellation.isCancelled, isFalse);
+                    if ((input as PreToolUseHookInput).toolName == 'Write') {
+                      cancelledHook.complete(context);
+                      await context.cancellation.whenCancelled;
+                    }
                     return const HookOutput(systemMessage: 'checked');
                   },
                 ],
@@ -301,6 +552,40 @@ void main() {
       expect(
         ((hookResponse['response'] as Map)['response'] as Map)['systemMessage'],
         'checked',
+      );
+
+      transport.emit({
+        'type': 'control_request',
+        'request_id': 'hook-cancelled',
+        'request': {
+          'subtype': 'hook_callback',
+          'callback_id': callbackId,
+          'input': {
+            'hook_event_name': 'PreToolUse',
+            'session_id': 's',
+            'transcript_path': '/tmp/s.jsonl',
+            'cwd': '/tmp',
+            'tool_name': 'Write',
+            'tool_input': {'file_path': '/tmp/a'},
+            'tool_use_id': 'tool-cancelled',
+          },
+        },
+      });
+      final hookContext = await cancelledHook.future;
+      expect(hookContext.cancellation.requestId, 'hook-cancelled');
+      transport.emit({
+        'type': 'control_cancel_request',
+        'request_id': 'hook-cancelled',
+      });
+      await hookContext.cancellation.whenCancelled;
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        transport.written.where(
+          (value) =>
+              value['type'] == 'control_response' &&
+              (value['response'] as Map)['request_id'] == 'hook-cancelled',
+        ),
+        isEmpty,
       );
 
       transport.emit({
