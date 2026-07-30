@@ -3,7 +3,22 @@ import 'dart:io';
 
 import '../app_server/json_values.dart';
 import '../config/authentication.dart';
+import '../config/modes.dart';
 import 'diagnostics.dart';
+
+/// The Codex app-server reviewer for eligible approval requests.
+enum CodexApprovalsReviewer {
+  /// Route approval requests to the ACP client for human review.
+  user('user'),
+
+  /// Let Codex's native automatic reviewer decide eligible requests.
+  autoReview('auto_review');
+
+  const CodexApprovalsReviewer(this.appServerValue);
+
+  /// Wire value sent to Codex app-server.
+  final String appServerValue;
+}
 
 /// Runtime configuration for a local adapter.
 final class CodexAdapterOptions {
@@ -14,6 +29,7 @@ final class CodexAdapterOptions {
     this.modelProvider,
     this.defaultAuthentication,
     Map<String, String>? environment,
+    this.workspaceWriteApprovalsReviewer = CodexApprovalsReviewer.user,
     this.shutdownTimeout = const Duration(seconds: 2),
     this.maximumStderrTailCharacters = 2048,
     this.onDiagnostic,
@@ -52,6 +68,28 @@ final class CodexAdapterOptions {
 
   /// Child environment.
   final Map<String, String> environment;
+
+  /// Reviewer used for standard workspace-write turns.
+  ///
+  /// Read-only and plan turns always remain human-reviewed. Full-access turns
+  /// keep their `never` approval policy, so this setting does not widen their
+  /// permissions.
+  final CodexApprovalsReviewer workspaceWriteApprovalsReviewer;
+
+  /// Resolves the app-server reviewer for a turn.
+  ///
+  /// Automatic review is deliberately limited to the standard collaboration
+  /// mode in a workspace-write sandbox. This keeps read-only and plan turns on
+  /// explicit human review even when an embedded client opts workspace work
+  /// into automatic review.
+  CodexApprovalsReviewer resolveApprovalsReviewer({
+    required CodexAgentMode agentMode,
+    required CodexCollaborationMode collaborationMode,
+  }) =>
+      agentMode == CodexAgentMode.workspaceWrite &&
+          collaborationMode == CodexCollaborationMode.standard
+      ? workspaceWriteApprovalsReviewer
+      : CodexApprovalsReviewer.user;
 
   /// Graceful child shutdown timeout.
   final Duration shutdownTimeout;

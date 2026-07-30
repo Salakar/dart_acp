@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3
+
+- Added `CodexApprovalsReviewer` and
+  `CodexAdapterOptions.workspaceWriteApprovalsReviewer` so embedded clients can
+  opt standard workspace-write turns into Codex's native automatic approval
+  review while read-only and plan turns remain human-reviewed.
+
 ## 0.1.2
 
 - Implement the shared ACP goal-control extension, including objective updates,

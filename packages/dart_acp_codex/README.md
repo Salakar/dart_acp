@@ -110,6 +110,18 @@ effort, and the fast service tier when the selected model supports it.
 Standard and plan collaboration modes are available through ACP session mode
 methods and `/plan`.
 
+Embedded clients can select Codex's native automatic approval reviewer for
+standard workspace-write turns:
+
+```dart
+CodexAdapterOptions(
+  workspaceWriteApprovalsReviewer: CodexApprovalsReviewer.autoReview,
+);
+```
+
+Read-only and plan turns remain human-reviewed, and full-access turns retain
+their `never` approval policy.
+
 ## Providers and extensions
 
 The experimental ACP provider surface advertises one optional provider:

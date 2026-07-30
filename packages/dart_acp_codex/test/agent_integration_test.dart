@@ -523,6 +523,75 @@ void main() {
     expect(harness.backend.count('thread/archive'), 1);
   });
 
+  test('scopes automatic approval review to standard workspace work', () async {
+    final harness = await _connect(
+      options: CodexAdapterOptions(
+        environment: const <String, String>{},
+        workspaceWriteApprovalsReviewer: CodexApprovalsReviewer.autoReview,
+      ),
+    );
+    addTearDown(harness.close);
+    final created = await harness.pair.client.agent.createSession(
+      NewSessionRequest(cwd: '/workspace', mcpServers: const <McpServer>[]),
+    );
+    final sessionId = created.sessionId;
+
+    Future<CodexJsonObject> startAndComplete(String text) async {
+      final turnNumber = harness.backend.count('turn/start') + 1;
+      final turnId = 'turn-$turnNumber';
+      final turn = harness.pair.client.agent.sendPrompt(
+        PromptRequest(
+          sessionId: sessionId,
+          prompt: <ContentBlock>[_text(text)],
+        ),
+      );
+      await _flush();
+      final params = harness.backend.lastCall('turn/start').params;
+      harness.backend.emit(
+        'turn/completed',
+        <String, Object?>{
+          'turn': <String, Object?>{'id': turnId, 'status': 'completed'},
+        },
+        threadId: sessionId.value,
+        turnId: turnId,
+      );
+      expect((await turn).stopReason, StopReason.endTurn);
+      return params;
+    }
+
+    expect(
+      (await startAndComplete('workspace work'))['approvalsReviewer'],
+      'auto_review',
+    );
+
+    await harness.pair.client.agent.setSessionConfigOption(
+      _params(sessionSetConfigOptionMethod, <String, Object?>{
+        'sessionId': sessionId.value,
+        'configId': 'agent-mode',
+        'value': 'read-only',
+      }),
+    );
+    expect(
+      (await startAndComplete('read-only work'))['approvalsReviewer'],
+      'user',
+    );
+
+    await harness.pair.client.agent.setSessionConfigOption(
+      _params(sessionSetConfigOptionMethod, <String, Object?>{
+        'sessionId': sessionId.value,
+        'configId': 'agent-mode',
+        'value': 'agent',
+      }),
+    );
+    await harness.pair.client.agent.setSessionMode(
+      SetSessionModeRequest(
+        sessionId: sessionId,
+        modeId: SessionModeId('plan'),
+      ),
+    );
+    expect((await startAndComplete('plan work'))['approvalsReviewer'], 'user');
+  });
+
   test('bridges approvals, elicitations, steering, and goals', () async {
     final harness = await _connect(
       elicitationContent: const <String, Object?>{

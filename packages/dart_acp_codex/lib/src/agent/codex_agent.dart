@@ -949,7 +949,12 @@ final class CodexAgent {
           'input': _promptMapper.map(request.prompt),
           'cwd': state.cwd,
           'approvalPolicy': state.agentMode.approvalPolicy,
-          'approvalsReviewer': 'user',
+          'approvalsReviewer': options
+              .resolveApprovalsReviewer(
+                agentMode: state.agentMode,
+                collaborationMode: state.collaborationMode,
+              )
+              .appServerValue,
           'sandboxPolicy': _sandboxPolicy(state),
           'model': state.model,
           'serviceTier': state.fastMode ? 'fast' : null,
@@ -1062,7 +1067,12 @@ final class CodexAgent {
           'input': _promptMapper.map(prompt),
           'cwd': state.cwd,
           'approvalPolicy': state.agentMode.approvalPolicy,
-          'approvalsReviewer': 'user',
+          'approvalsReviewer': options
+              .resolveApprovalsReviewer(
+                agentMode: state.agentMode,
+                collaborationMode: state.collaborationMode,
+              )
+              .appServerValue,
           'sandboxPolicy': _sandboxPolicy(state),
           'model': state.model,
           'serviceTier': state.fastMode ? 'fast' : null,

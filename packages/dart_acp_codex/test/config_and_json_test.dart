@@ -10,6 +10,49 @@ void main() {
       expect(CodexAgentMode.tryParse('unknown'), isNull);
     });
 
+    test('approval reviewer defaults to human review', () {
+      final options = CodexAdapterOptions(
+        environment: const <String, String>{},
+      );
+
+      expect(
+        options.resolveApprovalsReviewer(
+          agentMode: CodexAgentMode.workspaceWrite,
+          collaborationMode: CodexCollaborationMode.standard,
+        ),
+        CodexApprovalsReviewer.user,
+      );
+    });
+
+    test('automatic review is limited to standard workspace work', () {
+      final options = CodexAdapterOptions(
+        environment: const <String, String>{},
+        workspaceWriteApprovalsReviewer: CodexApprovalsReviewer.autoReview,
+      );
+
+      expect(
+        options.resolveApprovalsReviewer(
+          agentMode: CodexAgentMode.workspaceWrite,
+          collaborationMode: CodexCollaborationMode.standard,
+        ),
+        CodexApprovalsReviewer.autoReview,
+      );
+      expect(
+        options.resolveApprovalsReviewer(
+          agentMode: CodexAgentMode.readOnly,
+          collaborationMode: CodexCollaborationMode.standard,
+        ),
+        CodexApprovalsReviewer.user,
+      );
+      expect(
+        options.resolveApprovalsReviewer(
+          agentMode: CodexAgentMode.workspaceWrite,
+          collaborationMode: CodexCollaborationMode.plan,
+        ),
+        CodexApprovalsReviewer.user,
+      );
+    });
+
     test('model selection parses the final effort component', () {
       final selection = CodexModelSelection.parse('gpt/custom/high');
       expect(selection.model, 'gpt/custom');
