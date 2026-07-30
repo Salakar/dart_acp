@@ -2934,7 +2934,7 @@ final class CreateTerminalRequest implements AcpJsonEncodable {
       result['cwd'] = cwd!;
     }
     if (outputByteLimit != null) {
-      result['outputByteLimit'] = outputByteLimit!.value.toInt();
+      result['outputByteLimit'] = encodeAcpUint64(outputByteLimit!);
     }
     if (meta != null) {
       result['_meta'] = meta!.toObject();
@@ -3455,7 +3455,7 @@ final class ElicitationContentValueInteger extends ElicitationContentValue {
   final AcpInt64 value;
 
   @override
-  Object? toJson() => value.value.toInt();
+  Object? toJson() => encodeAcpInt64(value);
 }
 
 /// Number value accepted in elicitation response content.
@@ -5578,13 +5578,13 @@ final class IntegerPropertySchema implements AcpJsonEncodable {
       result['description'] = description!;
     }
     if (minimum != null) {
-      result['minimum'] = minimum!.value.toInt();
+      result['minimum'] = encodeAcpInt64(minimum!);
     }
     if (maximum != null) {
-      result['maximum'] = maximum!.value.toInt();
+      result['maximum'] = encodeAcpInt64(maximum!);
     }
     if (defaultValue != null) {
-      result['default'] = defaultValue!.value.toInt();
+      result['default'] = encodeAcpInt64(defaultValue!);
     }
     if (meta != null) {
       result['_meta'] = meta!.toObject();
@@ -6915,10 +6915,10 @@ final class MultiSelectPropertySchema implements AcpJsonEncodable {
       result['description'] = description!;
     }
     if (minItems != null) {
-      result['minItems'] = minItems!.value.toInt();
+      result['minItems'] = encodeAcpUint64(minItems!);
     }
     if (maxItems != null) {
-      result['maxItems'] = maxItems!.value.toInt();
+      result['maxItems'] = encodeAcpUint64(maxItems!);
     }
     result['items'] = multiSelectItemsCodec.encode(items);
     if (defaultValue != null) {
@@ -8402,7 +8402,7 @@ final class RequestIdNumber extends RequestId {
   final AcpInt64 value;
 
   @override
-  Object? toJson() => value.value.toInt();
+  Object? toJson() => encodeAcpInt64(value);
 }
 
 /// A string JSON-RPC request id.
@@ -8787,7 +8787,7 @@ final class ResourceLink implements AcpJsonEncodable {
     }
     result['name'] = name;
     if (size != null) {
-      result['size'] = size!.value.toInt();
+      result['size'] = encodeAcpInt64(size!);
     }
     if (title != null) {
       result['title'] = title!;
@@ -13312,8 +13312,8 @@ final class UsageUpdate implements AcpJsonEncodable {
   /// Encodes this value to its wire object.
   Map<String, Object?> toJson() {
     final result = <String, Object?>{};
-    result['used'] = used.value.toInt();
-    result['size'] = size.value.toInt();
+    result['used'] = encodeAcpUint64(used);
+    result['size'] = encodeAcpUint64(size);
     cost.writeTo(result, 'cost', (value) => costCodec.encode(value));
     if (meta != null) {
       result['_meta'] = meta!.toObject();

@@ -322,6 +322,26 @@ AcpInt64 decodeAcpInt64(Object? value) =>
 AcpUint64 decodeAcpUint64(Object? value) =>
     AcpUint64(BigInt.from(decodeAcpInteger(value)));
 
+/// Encodes a signed 64-bit value when it is exact in an IEEE-754 JSON number.
+int encodeAcpInt64(AcpInt64 value) =>
+    _encodeAcpSafeInteger(value.value, 'signed 64-bit integer');
+
+/// Encodes an unsigned 64-bit value when it is exact in an IEEE-754 JSON number.
+int encodeAcpUint64(AcpUint64 value) =>
+    _encodeAcpSafeInteger(value.value, 'unsigned 64-bit integer');
+
+final BigInt _minimumSafeJsonInteger = BigInt.from(-9007199254740991);
+final BigInt _maximumSafeJsonInteger = BigInt.from(9007199254740991);
+
+int _encodeAcpSafeInteger(BigInt value, String label) {
+  if (value < _minimumSafeJsonInteger || value > _maximumSafeJsonInteger) {
+    throw RangeError(
+      'ACP $label cannot be represented exactly as a JSON number: $value',
+    );
+  }
+  return value.toInt();
+}
+
 /// Decodes an absolute RFC 3986 URI.
 Uri decodeAcpUri(Object? value) {
   final Uri uri = Uri.parse(decodeAcpString(value));

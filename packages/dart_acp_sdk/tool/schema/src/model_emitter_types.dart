@@ -93,12 +93,12 @@ extension _ModelEmitterTypes on ModelEmitter {
         'int64' => _DartType.custom(
           code: 'AcpInt64',
           decoder: (String input) => 'decodeAcpInt64($input)',
-          encoder: (String input) => '$input.value.toInt()',
+          encoder: (String input) => 'encodeAcpInt64($input)',
         ),
         'uint64' => _DartType.custom(
           code: 'AcpUint64',
           decoder: (String input) => 'decodeAcpUint64($input)',
-          encoder: (String input) => '$input.value.toInt()',
+          encoder: (String input) => 'encodeAcpUint64($input)',
         ),
         'int32' => _DartType.custom(
           code: 'int',

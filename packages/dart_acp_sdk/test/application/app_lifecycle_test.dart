@@ -1,4 +1,6 @@
+import 'package:dart_acp_sdk/experimental/v1_unstable.dart' as unstable;
 import 'package:dart_acp_sdk/src/application/application.dart';
+import 'package:dart_acp_sdk/src/common/json_value.dart';
 import 'package:dart_acp_sdk/src/common/value_types.dart';
 import 'package:dart_acp_sdk/src/json_rpc/error.dart';
 import 'package:dart_acp_sdk/src/protocol/method.dart';
@@ -117,6 +119,49 @@ void main() {
       client.connectWith(agent),
       throwsA(anyOf(isA<JsonRpcRequestException>(), isA<StateError>())),
     );
+  });
+
+  test('stable v1 agents can advertise experimental capabilities', () async {
+    unstable.InitializeResponse? initialized;
+    final AcpAgentApp agent = AcpAgentApp.v1(
+      implementation: implementation('agent'),
+      capabilities: agentCapabilities(),
+      capabilityExtensions: AcpJsonObject.fromObject(<String, Object?>{
+        'providers': <String, Object?>{},
+      }),
+    );
+    final AcpClientApp client = AcpClientApp(
+      initialization:
+          AcpClientInitialization<
+            unstable.InitializeRequest,
+            unstable.InitializeResponse
+          >(
+            method: unstable.initializeMethod,
+            request: unstable.InitializeRequest.fromJson(<String, Object?>{
+              'protocolVersion': 1,
+              'clientCapabilities': <String, Object?>{},
+            }),
+            peerCapabilities: (unstable.InitializeResponse response) {
+              initialized = response;
+              return AcpPeerCapabilities(
+                AcpJsonObject.fromObject(<String, Object?>{
+                  'agentCapabilities': response.agentCapabilities.toJson(),
+                }),
+              );
+            },
+          ),
+    );
+
+    final AcpDirectConnectionPair pair = await client.connectWith(agent);
+
+    expect(initialized?.agentCapabilities.providers, isNotNull);
+    expect(
+      pair.client.lifecycle.peerCapabilities.supports(
+        'agentCapabilities.providers',
+      ),
+      isTrue,
+    );
+    await pair.close();
   });
 
   test('session builder validates absolute paths', () {

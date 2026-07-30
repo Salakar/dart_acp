@@ -10,6 +10,13 @@ final class AcpAgentApp {
     v1.Implementation? implementation,
     v1.AgentCapabilities? capabilities,
     Iterable<v1.AuthMethod> authMethods = const <v1.AuthMethod>[],
+
+    /// Additional top-level capability objects advertised alongside the
+    /// stable v1 capabilities.
+    ///
+    /// This is intended for explicitly enabled experimental protocol
+    /// features. Keys cannot replace stable capability fields.
+    AcpJsonObject? capabilityExtensions,
     Iterable<AcpMethodDescriptorBase> protocolDescriptors =
         v1_methods.v1StableMethodDescriptors,
   }) : name = name ?? implementation?.name ?? 'agent',
@@ -26,6 +33,7 @@ final class AcpAgentApp {
          implementation,
          capabilities,
          authMethods,
+         capabilityExtensions,
        ),
        _middleware = const <AcpMiddleware>[],
        _connectHandlers = const <AcpAgentConnectHandler>[];
@@ -35,11 +43,19 @@ final class AcpAgentApp {
     required v1.Implementation implementation,
     required v1.AgentCapabilities capabilities,
     Iterable<v1.AuthMethod> authMethods = const <v1.AuthMethod>[],
+
+    /// Additional top-level capability objects advertised alongside the
+    /// stable v1 capabilities.
+    ///
+    /// This is intended for explicitly enabled experimental protocol
+    /// features. Keys cannot replace stable capability fields.
+    AcpJsonObject? capabilityExtensions,
     AcpApplicationOptions options = const AcpApplicationOptions(),
   }) => AcpAgentApp(
     implementation: implementation,
     capabilities: capabilities,
     authMethods: authMethods,
+    capabilityExtensions: capabilityExtensions,
     options: options,
   );
 

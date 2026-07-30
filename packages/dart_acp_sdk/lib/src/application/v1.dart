@@ -37,6 +37,7 @@ List<_AcpAgentBinding> _initialAgentBindings(
   v1.Implementation? implementation,
   v1.AgentCapabilities? capabilities,
   Iterable<v1.AuthMethod> authMethods,
+  AcpJsonObject? capabilityExtensions,
 ) {
   if (configured != null || implementation == null || capabilities == null) {
     return const <_AcpAgentBinding>[];
@@ -46,7 +47,7 @@ List<_AcpAgentBinding> _initialAgentBindings(
   );
   return List<_AcpAgentBinding>.unmodifiable(<_AcpAgentBinding>[
     _AcpAgentRequestBinding<v1.InitializeRequest, v1.InitializeResponse>(
-      v1_methods.initializeMethod,
+      _v1InitializeMethod(capabilityExtensions),
       (AcpAgentRequestContext<v1.InitializeRequest> context) {
         _requireV1(context.params.protocolVersion);
         return v1.InitializeResponse(
@@ -58,6 +59,57 @@ List<_AcpAgentBinding> _initialAgentBindings(
       },
     ),
   ]);
+}
+
+AcpMethodDescriptor<v1.InitializeRequest, v1.InitializeResponse>
+_v1InitializeMethod(AcpJsonObject? capabilityExtensions) {
+  if (capabilityExtensions == null || capabilityExtensions.isEmpty) {
+    return v1_methods.initializeMethod;
+  }
+  final base = v1_methods.initializeMethod;
+  return AcpMethodDescriptor<v1.InitializeRequest, v1.InitializeResponse>(
+    name: base.name,
+    dartName: base.dartName,
+    protocol: base.protocol,
+    stability: base.stability,
+    direction: base.direction,
+    kind: base.kind,
+    paramsDefinition: base.paramsDefinition,
+    paramsCodec: base.paramsCodec,
+    resultCodec: _V1InitializeResponseCodec(capabilityExtensions),
+    resultDefinition: base.resultDefinition,
+    capabilityPath: base.capabilityPath,
+    documentation: base.documentation,
+  );
+}
+
+final class _V1InitializeResponseCodec
+    implements AcpCodec<v1.InitializeResponse> {
+  const _V1InitializeResponseCodec(this.extensions);
+
+  final AcpJsonObject extensions;
+
+  @override
+  v1.InitializeResponse decode(Object? value) =>
+      v1.initializeResponseCodec.decode(value);
+
+  @override
+  Object encode(v1.InitializeResponse value) {
+    final result = value.toJson();
+    final capabilities = value.agentCapabilities.toJson();
+    for (final entry in extensions.toObject().entries) {
+      if (capabilities.containsKey(entry.key)) {
+        throw ArgumentError.value(
+          entry.key,
+          'capabilityExtensions',
+          'must not replace a stable agent capability',
+        );
+      }
+      capabilities[entry.key] = entry.value;
+    }
+    result['agentCapabilities'] = capabilities;
+    return result;
+  }
 }
 
 AcpClientInitializationConfiguration? _resolveClientInitialization(

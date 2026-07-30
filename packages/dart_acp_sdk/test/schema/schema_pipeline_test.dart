@@ -129,6 +129,23 @@ void main() {
     }
   });
 
+  test('handwritten value-type surface contains only intentional adapters', () {
+    final String source = File(
+      'lib/src/common/value_types.dart',
+    ).readAsStringSync();
+    final Set<String> declarations = RegExp(
+      r'^(?:extension type const|final class) (Acp\w+)',
+      multiLine: true,
+    ).allMatches(source).map((RegExpMatch match) => match.group(1)!).toSet();
+
+    expect(declarations, <String>{
+      'AcpAbsolutePath',
+      'AcpDateTimeString',
+      'AcpInt64',
+      'AcpUint64',
+    });
+  });
+
   test('foreign schema references remain safe Dartdoc code spans', () {
     expect(
       sanitizeDartdoc(

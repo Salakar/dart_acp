@@ -3947,7 +3947,7 @@ final class DidChangeDocumentNotification implements AcpJsonEncodable {
     final result = <String, Object?>{};
     result['sessionId'] = sessionIdCodec.encode(sessionId);
     result['uri'] = uri.toString();
-    result['version'] = version.value.toInt();
+    result['version'] = encodeAcpInt64(version);
     result['contentChanges'] = <Object?>[
       for (final item in contentChanges)
         textDocumentContentChangeEventCodec.encode(item),
@@ -4069,7 +4069,7 @@ Object? _encodeDidFocusDocumentNotificationUri(Uri value) => value.toString();
 AcpInt64 _decodeDidFocusDocumentNotificationVersion(Object? value) =>
     decodeAcpInt64(value);
 Object? _encodeDidFocusDocumentNotificationVersion(AcpInt64 value) =>
-    value.value.toInt();
+    encodeAcpInt64(value);
 
 Position _decodeDidFocusDocumentNotificationPosition(Object? value) =>
     positionCodec.decode(value);
@@ -4197,7 +4197,7 @@ Object? _encodeDidOpenDocumentNotificationLanguageId(String value) => value;
 AcpInt64 _decodeDidOpenDocumentNotificationVersion(Object? value) =>
     decodeAcpInt64(value);
 Object? _encodeDidOpenDocumentNotificationVersion(AcpInt64 value) =>
-    value.value.toInt();
+    encodeAcpInt64(value);
 
 String _decodeDidOpenDocumentNotificationText(Object? value) =>
     decodeAcpString(value);
@@ -5538,7 +5538,7 @@ final class ElicitationContentValueInteger extends ElicitationContentValue {
   final AcpInt64 value;
 
   @override
-  Object? toJson() => value.value.toInt();
+  Object? toJson() => encodeAcpInt64(value);
 }
 
 /// Number value accepted in elicitation response content.
@@ -7981,13 +7981,13 @@ final class IntegerPropertySchema implements AcpJsonEncodable {
       result['description'] = description!;
     }
     if (minimum != null) {
-      result['minimum'] = minimum!.value.toInt();
+      result['minimum'] = encodeAcpInt64(minimum!);
     }
     if (maximum != null) {
-      result['maximum'] = maximum!.value.toInt();
+      result['maximum'] = encodeAcpInt64(maximum!);
     }
     if (defaultValue != null) {
-      result['default'] = defaultValue!.value.toInt();
+      result['default'] = encodeAcpInt64(defaultValue!);
     }
     if (meta != null) {
       result['_meta'] = meta!.toObject();
@@ -9824,10 +9824,10 @@ final class MultiSelectPropertySchema implements AcpJsonEncodable {
       result['description'] = description!;
     }
     if (minItems != null) {
-      result['minItems'] = minItems!.value.toInt();
+      result['minItems'] = encodeAcpUint64(minItems!);
     }
     if (maxItems != null) {
-      result['maxItems'] = maxItems!.value.toInt();
+      result['maxItems'] = encodeAcpUint64(maxItems!);
     }
     result['items'] = multiSelectItemsCodec.encode(items);
     if (defaultValue != null) {
@@ -11260,7 +11260,7 @@ final class NesOpenFile implements AcpJsonEncodable {
       result['visibleRange'] = rangeCodec.encode(visibleRange!);
     }
     if (lastFocusedMs != null) {
-      result['lastFocusedMs'] = lastFocusedMs!.value.toInt();
+      result['lastFocusedMs'] = encodeAcpUint64(lastFocusedMs!);
     }
     if (meta != null) {
       result['_meta'] = meta!.toObject();
@@ -12553,7 +12553,8 @@ Object? _encodeNesUserActionPosition(Position value) =>
 
 AcpUint64 _decodeNesUserActionTimestampMs(Object? value) =>
     decodeAcpUint64(value);
-Object? _encodeNesUserActionTimestampMs(AcpUint64 value) => value.value.toInt();
+Object? _encodeNesUserActionTimestampMs(AcpUint64 value) =>
+    encodeAcpUint64(value);
 
 @JsonSerializable(checked: true, explicitToJson: true, includeIfNull: false)
 /// A user action (typing, cursor movement, etc.).
@@ -15196,7 +15197,7 @@ final class RequestIdNumber extends RequestId {
   final AcpInt64 value;
 
   @override
-  Object? toJson() => value.value.toInt();
+  Object? toJson() => encodeAcpInt64(value);
 }
 
 /// A string JSON-RPC request id.
@@ -15797,7 +15798,7 @@ final class ResourceLink implements AcpJsonEncodable {
       result['mimeType'] = mediaTypeCodec.encode(mimeType!);
     }
     if (size != null) {
-      result['size'] = size!.value.toInt();
+      result['size'] = encodeAcpInt64(size!);
     }
     if (annotations != null) {
       result['annotations'] = annotationsCodec.encode(annotations!);
@@ -19234,7 +19235,7 @@ final class SuggestNesRequest implements AcpJsonEncodable {
     final result = <String, Object?>{};
     result['sessionId'] = sessionIdCodec.encode(sessionId);
     result['uri'] = uri.toString();
-    result['version'] = version.value.toInt();
+    result['version'] = encodeAcpInt64(version);
     result['position'] = positionCodec.encode(position);
     if (selection != null) {
       result['selection'] = rangeCodec.encode(selection!);
@@ -21092,17 +21093,17 @@ final class Usage implements AcpJsonEncodable {
   /// Encodes this value to its wire object.
   Map<String, Object?> toJson() {
     final result = <String, Object?>{};
-    result['totalTokens'] = totalTokens.value.toInt();
-    result['inputTokens'] = inputTokens.value.toInt();
-    result['outputTokens'] = outputTokens.value.toInt();
+    result['totalTokens'] = encodeAcpUint64(totalTokens);
+    result['inputTokens'] = encodeAcpUint64(inputTokens);
+    result['outputTokens'] = encodeAcpUint64(outputTokens);
     if (thoughtTokens != null) {
-      result['thoughtTokens'] = thoughtTokens!.value.toInt();
+      result['thoughtTokens'] = encodeAcpUint64(thoughtTokens!);
     }
     if (cachedReadTokens != null) {
-      result['cachedReadTokens'] = cachedReadTokens!.value.toInt();
+      result['cachedReadTokens'] = encodeAcpUint64(cachedReadTokens!);
     }
     if (cachedWriteTokens != null) {
-      result['cachedWriteTokens'] = cachedWriteTokens!.value.toInt();
+      result['cachedWriteTokens'] = encodeAcpUint64(cachedWriteTokens!);
     }
     if (meta != null) {
       result['_meta'] = meta!.toObject();
@@ -21174,8 +21175,8 @@ final class UsageUpdate implements AcpJsonEncodable {
   /// Encodes this value to its wire object.
   Map<String, Object?> toJson() {
     final result = <String, Object?>{};
-    result['used'] = used.value.toInt();
-    result['size'] = size.value.toInt();
+    result['used'] = encodeAcpUint64(used);
+    result['size'] = encodeAcpUint64(size);
     cost.writeTo(result, 'cost', (value) => costCodec.encode(value));
     if (meta != null) {
       result['_meta'] = meta!.toObject();
