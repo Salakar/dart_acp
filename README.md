@@ -28,16 +28,18 @@ a `closed` future, idempotent `close()`, and a matching
 | [`dart_acp_gemini`](packages/dart_acp_gemini/)     | `GeminiAcpClient.start()`   | Native Gemini ACP server with automatic stable/legacy flag detection  |
 | [`dart_acp_claude`](packages/dart_acp_claude/)     | `ClaudeAcpClient.start()`   | In-process ACP adapter over the typed Claude Agent SDK                |
 | [`dart_acp_codex`](packages/dart_acp_codex/)       | `CodexAcpClient.start()`    | In-process ACP adapter over a managed Codex `app-server` runtime      |
+| [`dart_acp_antigravity`](packages/dart_acp_antigravity/) | `AntigravityAcpClient.start()` | In-process ACP adapter over headless Antigravity CLI print-mode runs |
 
 ### Adapter building blocks
 
-Claude and Codex also expose their lower-level adapter APIs for custom
-transports and service boundaries.
+Claude, Codex, and Antigravity also expose their lower-level adapter APIs for
+custom transports and service boundaries.
 
 | Package                                        | Advanced APIs                                                                 |
 | ---------------------------------------------- | ----------------------------------------------------------------------------- |
 | [`dart_acp_claude`](packages/dart_acp_claude/) | `ClaudeAcpAgent`, reusable ACP application builder, and stdio executable      |
 | [`dart_acp_codex`](packages/dart_acp_codex/)   | `CodexAgent`, `CodexRuntime`, injectable `CodexBackend`, and stdio executable |
+| [`dart_acp_antigravity`](packages/dart_acp_antigravity/) | `AntigravityAcpAgent`, stream-json event types and mapper, and stdio executable |
 
 ### SDKs
 
@@ -74,7 +76,8 @@ Future<void> main() async {
 ```
 
 The equivalent entry points are `GeminiAcpClient.start()`,
-`ClaudeAcpClient.start()`, and `CodexAcpClient.start()`.
+`ClaudeAcpClient.start()`, `CodexAcpClient.start()`, and
+`AntigravityAcpClient.start()`.
 
 Use `dart_acp_sdk` directly when implementing an ACP client, agent, transport,
 or remote protocol host. Its default library is the stable ACP v1 surface.
@@ -117,6 +120,7 @@ This repository is a Melos workspace:
 ```text
 packages/
 ├── claude_agent_sdk/
+├── dart_acp_antigravity/
 ├── dart_acp_claude/
 ├── dart_acp_codex/
 ├── dart_acp_gemini/
