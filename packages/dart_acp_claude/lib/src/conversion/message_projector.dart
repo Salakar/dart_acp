@@ -506,9 +506,13 @@ final class ClaudeMessageProjector {
         // ACP's `used`/`size` describe the context window, but a client that
         // shows live "tokens generated" (Claude Code's own footer does) needs
         // the breakdown, and output tokens can't be derived from a total.
-        // Reported for the message in flight, reset at each `message_start`.
+        // These count the message in flight and reset at each `message_start`,
+        // so `messageId` rides along: without it a client can only spot a new
+        // message from its text chunks, and a tool-only message would look
+        // like the previous one's count dropping.
         '_meta': <String, Object?>{
           'claude': <String, Object?>{
+            'messageId': ?state._messageId,
             'inputTokens': state._inputTokens,
             'outputTokens': state._outputTokens,
             'cacheReadTokens': state._cacheReadTokens,
