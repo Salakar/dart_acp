@@ -813,6 +813,31 @@ final class ClaudeMessageProjector {
         }),
       ];
     }
+    // A background shell finished. ACP has no notion of a task that outlives
+    // the tool call that spawned it, so this rides on a metadata-only update
+    // for that call: a client showing "running in background" has no other
+    // way to learn the task ended, and most of these notifications carry
+    // `skipTranscript`, so replaying the thread will not reveal them either.
+    if (message is TaskNotificationMessage) {
+      final toolUseId = message.toolUseId;
+      if (toolUseId == null || toolUseId.isEmpty) {
+        return const <SessionUpdate>[];
+      }
+      return <SessionUpdate>[
+        SessionUpdate.fromJson(<String, Object?>{
+          'sessionUpdate': 'tool_call_update',
+          'toolCallId': toolUseId,
+          '_meta': <String, Object?>{
+            'claude': <String, Object?>{
+              'subtype': message.subtype,
+              'taskId': message.taskId,
+              'status': message.status.name,
+              'summary': message.summary,
+            },
+          },
+        }),
+      ];
+    }
     if (message is PermissionDeniedMessage) {
       return <SessionUpdate>[
         SessionUpdate.fromJson(<String, Object?>{
