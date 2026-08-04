@@ -165,6 +165,34 @@ final class ClaudeMessageProjector {
               ),
             );
             state?.surfaceTool(block.id);
+          } else if (surfaced &&
+              !_planOnlyTools.contains(block.name) &&
+              !(state?._tools[index]?.stopped ?? false)) {
+            // Streaming surfaced this call from `content_block_start`, where
+            // `input` is still empty, and the completed input exists only here.
+            // The CLI sends this assistant message BEFORE the matching
+            // `content_block_stop`, and this method clears the streamed state
+            // on its way out — so the stop handler that would have carried the
+            // input never sees the tool, and a client is left with a tool call
+            // it cannot describe. Send the input as an update instead.
+            updates.add(
+              _withAssistantMetadata(
+                SessionUpdate.fromJson(<String, Object?>{
+                  ...tools
+                      .start(
+                        block,
+                        cwd: cwd,
+                        supportsTerminalOutput: supportsTerminalOutput,
+                      )
+                      .toJson(),
+                  'sessionUpdate': 'tool_call_update',
+                  'toolCallId': block.id,
+                  'status': 'in_progress',
+                  'rawInput': block.input,
+                }),
+                message,
+              ),
+            );
           }
         case UnknownContentBlock(:final raw):
           if (message.parentToolUseId != null && !supportsSubagentTranscript) {

@@ -478,6 +478,99 @@ void main() {
       );
     });
 
+    test('carries a streamed tool input when the assistant message precedes '
+        'its content_block_stop', () {
+      // The CLI's real ordering: content_block_start (empty input), the
+      // input_json_delta chunks, then the assistant message — and only then
+      // content_block_stop. Projecting the assistant message clears the
+      // streamed state, so the input has to reach the client here or not at
+      // all.
+      final state = ClaudeMessageProjectionState();
+      List<SessionUpdate> project(claude.AgentMessage message) =>
+          messages.project(message, cwd: '/workspace', state: state);
+
+      project(
+        claude.StreamEventMessage(
+          uuid: 'start',
+          sessionId: 'session',
+          event: <String, Object?>{
+            'type': 'message_start',
+            'message': <String, Object?>{'id': 'message', 'model': 'model'},
+          },
+        ),
+      );
+      final call = project(
+        claude.StreamEventMessage(
+          uuid: 'tool-start',
+          sessionId: 'session',
+          event: <String, Object?>{
+            'type': 'content_block_start',
+            'index': 0,
+            'content_block': <String, Object?>{
+              'type': 'tool_use',
+              'id': 'tool',
+              'name': 'Bash',
+              'input': <String, Object?>{},
+            },
+          },
+        ),
+      ).single;
+      expect(call.discriminator, 'tool_call');
+      // Nothing to describe the call with yet, which is the whole problem.
+      expect(call.toJson()['rawInput'], isEmpty);
+
+      project(
+        claude.StreamEventMessage(
+          uuid: 'tool-delta',
+          sessionId: 'session',
+          event: <String, Object?>{
+            'type': 'content_block_delta',
+            'index': 0,
+            'delta': <String, Object?>{
+              'type': 'input_json_delta',
+              'partial_json': '{"command":"echo hi"}',
+            },
+          },
+        ),
+      );
+
+      final assistant = project(
+        claude.AssistantMessage(
+          content: <claude.ContentBlock>[
+            claude.ToolUseBlock(
+              id: 'tool',
+              name: 'Bash',
+              input: <String, Object?>{'command': 'echo hi'},
+            ),
+          ],
+          model: 'model',
+          messageId: 'message',
+          sessionId: 'session',
+          uuid: 'assistant',
+        ),
+      );
+      final update = assistant.singleWhere(
+        (u) => u.discriminator == 'tool_call_update',
+      );
+      expect(update.toJson()['toolCallId'], 'tool');
+      expect(
+        (update.toJson()['rawInput'] as Map?)?['command'],
+        'echo hi',
+      );
+
+      // The late stop adds nothing, and must not throw.
+      expect(
+        project(
+          claude.StreamEventMessage(
+            uuid: 'tool-stop',
+            sessionId: 'session',
+            event: <String, Object?>{'type': 'content_block_stop', 'index': 0},
+          ),
+        ),
+        isEmpty,
+      );
+    });
+
     test('streams TodoWrite as a plan instead of a generic tool card', () {
       final state = ClaudeMessageProjectionState()..beginTurn();
       List<SessionUpdate> project(claude.AgentMessage message) =>
