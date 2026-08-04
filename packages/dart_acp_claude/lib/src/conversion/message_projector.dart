@@ -127,7 +127,10 @@ final class ClaudeMessageProjector {
           if (message.parentToolUseId != null && !supportsSubagentTranscript) {
             break;
           }
-          final suffix = _unstreamed(text, state?._text[index]?.value);
+          final suffix = _unstreamed(
+            text,
+            _streamedValue(state, index, thinking: false, complete: text),
+          );
           if (suffix.isNotEmpty) {
             state?._emittedAgentText = true;
             updates.add(_chunk('agent_message_chunk', suffix, message));
@@ -136,7 +139,10 @@ final class ClaudeMessageProjector {
           if (message.parentToolUseId != null && !supportsSubagentTranscript) {
             break;
           }
-          final suffix = _unstreamed(thinking, state?._text[index]?.value);
+          final suffix = _unstreamed(
+            thinking,
+            _streamedValue(state, index, thinking: true, complete: thinking),
+          );
           if (suffix.isNotEmpty) {
             updates.add(_chunk('agent_thought_chunk', suffix, message));
           }
@@ -497,6 +503,18 @@ final class ClaudeMessageProjector {
         'sessionUpdate': 'usage_update',
         'used': used,
         'size': state._contextWindow,
+        // ACP's `used`/`size` describe the context window, but a client that
+        // shows live "tokens generated" (Claude Code's own footer does) needs
+        // the breakdown, and output tokens can't be derived from a total.
+        // Reported for the message in flight, reset at each `message_start`.
+        '_meta': <String, Object?>{
+          'claude': <String, Object?>{
+            'inputTokens': state._inputTokens,
+            'outputTokens': state._outputTokens,
+            'cacheReadTokens': state._cacheReadTokens,
+            'cacheWriteTokens': state._cacheWriteTokens,
+          },
+        },
       }),
     ];
   }
@@ -943,6 +961,40 @@ final class ClaudeMessageProjector {
     if (id != null && id.isNotEmpty) return id;
     final uuid = message.uuid;
     return uuid == null || uuid.isEmpty ? null : uuid;
+  }
+
+  /// The already-streamed prefix of a completed text/thinking block.
+  ///
+  /// The CLI sends one `assistant` event per content block, each carrying a
+  /// single-element `content` list, so a block's position *there* is always 0
+  /// — it stops matching the stream's `content_block_index` as soon as a
+  /// thinking or tool_use block precedes the text in the same message. Keyed
+  /// by that stale index, the lookup missed and the whole block was re-emitted
+  /// on top of the deltas the client had already rendered (every paragraph
+  /// after a thinking block appeared twice). Fall back to the longest streamed
+  /// value of the same kind that this block starts with.
+  String? _streamedValue(
+    ClaudeMessageProjectionState? state,
+    int index, {
+    required bool thinking,
+    required String complete,
+  }) {
+    if (state == null) return null;
+    final byIndex = state._text[index];
+    if (byIndex != null &&
+        byIndex.thinking == thinking &&
+        complete.startsWith(byIndex.value)) {
+      return byIndex.value;
+    }
+    String? best;
+    for (final streamed in state._text.values) {
+      if (streamed.thinking != thinking || streamed.value.isEmpty) continue;
+      if (!complete.startsWith(streamed.value)) continue;
+      if (best == null || streamed.value.length > best.length) {
+        best = streamed.value;
+      }
+    }
+    return best;
   }
 
   String _unstreamed(String complete, String? streamed) {
