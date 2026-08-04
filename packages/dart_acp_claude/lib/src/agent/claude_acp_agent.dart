@@ -1141,6 +1141,22 @@ final class ClaudeAcpAgent {
     AcpAgentRequestContext<PromptRequest> context,
   ) {
     final session = _requireSession(context.params.sessionId);
+    // A prompt that arrives while a turn is running is what a user typing
+    // mid-work looks like. Queuing it behind the running turn (which is what
+    // `enqueue` does) hides it until that turn ends — for a long turn the
+    // message reads as ignored. The CLI's streaming input accepts a user
+    // message at any time and folds it into the work in flight, exactly as
+    // Claude Code's own composer does, so hand it straight over and settle
+    // this request on the turn it joined.
+    if (session.activeTurn case final turn?) {
+      return _joinPrompt(
+        peer: context.client,
+        session: session,
+        prompt: context.params.prompt,
+        turn: turn,
+        cancellationToken: context.cancellationToken,
+      );
+    }
     return session.enqueue(() async {
       context.cancellationToken.throwIfCancelled();
       final registration = context.cancellationToken.register((_) {
@@ -1206,13 +1222,7 @@ final class ClaudeAcpAgent {
   }) async {
     cancellationToken?.throwIfCancelled();
     session.messageProjection.beginTurn();
-    final mapped = _promptMapper.map(prompt, sessionId: session.id.value);
-    final input = claude.UserInput(
-      content: mapped.content,
-      sessionId: mapped.sessionId,
-      parentToolUseId: mapped.parentToolUseId,
-      uuid: _idGenerator(),
-    );
+    final input = _userInput(session, prompt);
     final outcomeFuture = session.beginTurn();
     try {
       await session.client.sendStream(Stream<claude.UserInput>.value(input));
@@ -1220,7 +1230,77 @@ final class ClaudeAcpAgent {
       session.failTurn(error, stackTrace);
       rethrow;
     }
-    final outcome = await outcomeFuture;
+    return _settleTurn(
+      peer: peer,
+      session: session,
+      outcome: await outcomeFuture,
+      cancellationToken: cancellationToken,
+    );
+  }
+
+  /// Delivers [prompt] into the turn already in flight and settles with that
+  /// turn's outcome.
+  ///
+  /// The projection state is deliberately left alone: `beginTurn` would reset
+  /// the streamed-text and tool bookkeeping the running turn is still using.
+  /// A failed write is not the running turn's fault either, so it surfaces to
+  /// this caller without cancelling that turn. Cancelling this request does
+  /// cancel the joined turn — the two are one piece of work now.
+  Future<PromptResponse> _joinPrompt({
+    required AcpAgentContext peer,
+    required ClaudeAcpSession session,
+    required List<ContentBlock> prompt,
+    required Future<ClaudeAcpTurnOutcome> turn,
+    CancellationToken? cancellationToken,
+  }) async {
+    cancellationToken?.throwIfCancelled();
+    final registration = cancellationToken?.register((_) {
+      unawaited(
+        session.cancel(
+          grace: options.forceCancelGrace,
+          onForced: () => _logger.error(
+            'Claude did not yield after cancellation; forcing the ACP turn '
+            'to settle as cancelled.',
+          ),
+        ),
+      );
+    });
+    try {
+      await session.client.sendStream(
+        Stream<claude.UserInput>.value(_userInput(session, prompt)),
+      );
+      return await _settleTurn(
+        peer: peer,
+        session: session,
+        outcome: await turn,
+        cancellationToken: cancellationToken,
+      );
+    } finally {
+      registration?.dispose();
+    }
+  }
+
+  claude.UserInput _userInput(
+    ClaudeAcpSession session,
+    List<ContentBlock> prompt,
+  ) {
+    final mapped = _promptMapper.map(prompt, sessionId: session.id.value);
+    return claude.UserInput(
+      content: mapped.content,
+      sessionId: mapped.sessionId,
+      parentToolUseId: mapped.parentToolUseId,
+      uuid: _idGenerator(),
+    );
+  }
+
+  /// Maps a settled turn to its ACP response, raising the authentication and
+  /// failure cases as JSON-RPC errors.
+  Future<PromptResponse> _settleTurn({
+    required AcpAgentContext peer,
+    required ClaudeAcpSession session,
+    required ClaudeAcpTurnOutcome outcome,
+    CancellationToken? cancellationToken,
+  }) async {
     cancellationToken?.throwIfCancelled();
     final message = outcome.result;
     final stopReason = _stopReason(message);
