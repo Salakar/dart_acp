@@ -53,7 +53,7 @@ final class CodexAgent {
       implementation: Implementation(
         name: 'dart_acp_codex',
         title: 'Codex',
-        version: '0.1.4',
+        version: '0.1.5',
       ),
       capabilities: AgentCapabilities(
         loadSession: true,
@@ -211,7 +211,7 @@ final class CodexAgent {
         'clientInfo': <String, Object?>{
           'name': 'dart_acp_codex',
           'title': 'Dart ACP Codex',
-          'version': '0.1.4',
+          'version': '0.1.5',
         },
         'capabilities': <String, Object?>{
           'experimentalApi': true,
@@ -927,7 +927,14 @@ final class CodexAgent {
       }
       return PromptResponse(stopReason: StopReason.endTurn);
     }
-    await _maybeSetInitialThreadName(state, request.prompt);
+    final titleMetadata = request.meta;
+    await _maybeSetInitialThreadName(
+      state,
+      request.prompt,
+      titleHintProvided:
+          titleMetadata?.containsKey(codexThreadTitlePromptMetaKey) ?? false,
+      titleHint: titleMetadata?[codexThreadTitlePromptMetaKey]?.toObject(),
+    );
     if (state.activeTurn case final activeTurn?) {
       await _backend.request(
         'turn/steer',
@@ -1005,12 +1012,16 @@ final class CodexAgent {
 
   Future<void> _maybeSetInitialThreadName(
     CodexSessionState state,
-    Iterable<ContentBlock> prompt,
-  ) async {
+    Iterable<ContentBlock> prompt, {
+    required bool titleHintProvided,
+    Object? titleHint,
+  }) async {
     if (!state.autoNameOnPrompt) {
       return;
     }
-    final title = CodexThreadTitle.fromPrompt(prompt);
+    final title = titleHintProvided
+        ? CodexThreadTitle.fromText(titleHint)
+        : CodexThreadTitle.fromPrompt(prompt);
     if (title == null) {
       return;
     }

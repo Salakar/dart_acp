@@ -28,4 +28,10 @@ void main() {
   test('returns null without text content', () {
     expect(CodexThreadTitle.fromPrompt(const <ContentBlock>[]), isNull);
   });
+
+  test('normalizes a client-authored title hint independently', () {
+    expect(CodexThreadTitle.fromText('  User\n prompt  '), 'User prompt');
+    expect(CodexThreadTitle.fromText('   '), isNull);
+    expect(CodexThreadTitle.fromText(42), isNull);
+  });
 }

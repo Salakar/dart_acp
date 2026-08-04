@@ -449,7 +449,12 @@ void main() {
     final turnFuture = harness.pair.client.agent.sendPrompt(
       PromptRequest(
         sessionId: sessionId,
-        prompt: <ContentBlock>[_text('hello')],
+        prompt: <ContentBlock>[
+          _text('<hidden context>ignore me</hidden context>\nhello'),
+        ],
+        meta: AcpJsonObject.fromObject(<String, Object?>{
+          codexThreadTitlePromptMetaKey: 'hello',
+        }),
       ),
     );
     await _flush();

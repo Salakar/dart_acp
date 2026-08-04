@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.5
+
+- Added the namespaced `codexThreadTitlePromptMetaKey` hint so ACP clients that
+  prepend hidden context can still name native Codex threads from only the
+  user-visible prompt.
+
 ## 0.1.4
 
 - Name new native Codex threads from their first substantive ACP prompt so

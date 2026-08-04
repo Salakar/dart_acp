@@ -17,4 +17,5 @@ export 'src/runtime/diagnostics.dart';
 export 'src/runtime/options.dart';
 export 'src/runtime/runtime.dart';
 export 'src/session/goal.dart';
+export 'src/session/thread_title.dart';
 export 'src/session/usage.dart';
