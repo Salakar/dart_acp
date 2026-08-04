@@ -18,6 +18,7 @@ final class CodexSessionState {
     required this.collaborationMode,
     required this.model,
     required this.effort,
+    this.autoNameOnPrompt = false,
     this.contextWindow,
   }) : additionalDirectories = List<String>.unmodifiable(additionalDirectories);
 
@@ -41,6 +42,9 @@ final class CodexSessionState {
 
   /// Selected reasoning effort.
   CodexReasoningEffort effort;
+
+  /// Whether the next substantive prompt should name a newly created thread.
+  bool autoNameOnPrompt;
 
   /// Selected model context window.
   int? contextWindow;

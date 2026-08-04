@@ -95,7 +95,7 @@ AcpClientApp _defaultClientApp() =>
       implementation: Implementation(
         name: 'dart_acp_codex',
         title: 'Dart ACP Codex',
-        version: '0.1.2',
+        version: '0.1.4',
       ),
       capabilities: ClientCapabilities(
         fs: FileSystemCapabilities(readTextFile: false, writeTextFile: false),

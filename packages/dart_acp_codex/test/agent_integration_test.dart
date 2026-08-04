@@ -454,6 +454,21 @@ void main() {
     );
     await _flush();
     expect(harness.backend.count('turn/start'), 1);
+    expect(harness.backend.count('thread/name/set'), 1);
+    expect(
+      harness.backend.lastCall('thread/name/set').params.toJson(),
+      containsPair('name', 'hello'),
+    );
+    expect(
+      harness.updates
+          .where(
+            (update) =>
+                update.sessionId == sessionId &&
+                update.update.discriminator == 'session_info_update',
+          )
+          .map((update) => update.update.toJson().toString()),
+      contains(contains('hello')),
+    );
     harness.backend.emit(
       'item/agentMessage/delta',
       <String, Object?>{'delta': 'world'},
@@ -492,6 +507,7 @@ void main() {
     );
     expect((await cancelFuture).stopReason, StopReason.cancelled);
     expect(harness.backend.count('turn/interrupt'), 1);
+    expect(harness.backend.count('thread/name/set'), 1);
 
     await harness.pair.client.agent.closeSession(
       CloseSessionRequest(sessionId: sessionId),
@@ -1328,4 +1344,74 @@ void main() {
       );
     }
   });
+
+  test(
+    'native thread naming is best effort and only applies to new sessions',
+    () async {
+      final diagnostics = <CodexDiagnostic>[];
+      final harness = await _connect(
+        options: CodexAdapterOptions(
+          environment: const <String, String>{},
+          onDiagnostic: diagnostics.add,
+        ),
+        configureBackend: (backend) {
+          backend.on(
+            'thread/name/set',
+            (_) => throw StateError('unsupported in fixture'),
+          );
+        },
+      );
+      addTearDown(harness.close);
+
+      final created = await harness.pair.client.agent.createSession(
+        NewSessionRequest(cwd: '/workspace', mcpServers: const <McpServer>[]),
+      );
+      final createdTurn = harness.pair.client.agent.sendPrompt(
+        PromptRequest(
+          sessionId: created.sessionId,
+          prompt: <ContentBlock>[_text('name me')],
+        ),
+      );
+      await _flush();
+      expect(harness.backend.count('thread/name/set'), 1);
+      expect(harness.backend.count('turn/start'), 1);
+      harness.backend.emit(
+        'turn/completed',
+        <String, Object?>{
+          'turn': <String, Object?>{'id': 'turn-1', 'status': 'completed'},
+        },
+        threadId: created.sessionId.value,
+        turnId: 'turn-1',
+      );
+      expect((await createdTurn).stopReason, StopReason.endTurn);
+      expect(
+        diagnostics.map((diagnostic) => diagnostic.message),
+        contains('The Codex app server could not name the new thread.'),
+      );
+
+      const resumedIdValue = 'resumed';
+      final resumedId = SessionId(resumedIdValue);
+      await harness.pair.client.agent.resumeSession(
+        ResumeSessionRequest(sessionId: resumedId, cwd: '/workspace'),
+      );
+      final resumedTurn = harness.pair.client.agent.sendPrompt(
+        PromptRequest(
+          sessionId: resumedId,
+          prompt: <ContentBlock>[_text('do not rename me')],
+        ),
+      );
+      await _flush();
+      expect(harness.backend.count('thread/name/set'), 1);
+      expect(harness.backend.count('turn/start'), 2);
+      harness.backend.emit(
+        'turn/completed',
+        <String, Object?>{
+          'turn': <String, Object?>{'id': 'turn-2', 'status': 'completed'},
+        },
+        threadId: resumedIdValue,
+        turnId: 'turn-2',
+      );
+      expect((await resumedTurn).stopReason, StopReason.endTurn);
+    },
+  );
 }

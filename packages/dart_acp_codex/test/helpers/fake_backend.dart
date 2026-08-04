@@ -108,6 +108,13 @@ final class FakeCodexBackend implements CodexBackend {
           'data': <Object?>[],
           'nextCursor': null,
         });
+      case 'thread/name/set':
+        scheduleMicrotask(() {
+          emit('thread/name/updated', <String, Object?>{
+            'threadName': params.requireString('name'),
+          }, threadId: params.requireString('threadId'));
+        });
+        return CodexJsonObject.empty;
       case 'turn/start':
         return CodexJsonObject.from(<String, Object?>{
           'turn': <String, Object?>{'id': 'turn-${++_turnCounter}'},

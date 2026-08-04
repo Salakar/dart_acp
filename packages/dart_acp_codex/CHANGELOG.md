@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.4
+
+- Name new native Codex threads from their first substantive ACP prompt so
+  clients receive the existing `session_info_update` title notification. Names
+  are whitespace-normalized and limited to 80 Unicode code points.
+
 ## 0.1.3
 
 - Added `CodexApprovalsReviewer` and

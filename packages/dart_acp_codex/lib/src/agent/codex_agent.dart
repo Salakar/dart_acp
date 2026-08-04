@@ -22,6 +22,7 @@ import '../runtime/diagnostics.dart';
 import '../runtime/options.dart';
 import '../session/state.dart';
 import '../session/steering_queue.dart';
+import '../session/thread_title.dart';
 import 'extensions.dart';
 
 /// ACP agent backed by a Codex app-server connection.
@@ -52,7 +53,7 @@ final class CodexAgent {
       implementation: Implementation(
         name: 'dart_acp_codex',
         title: 'Codex',
-        version: '0.1.2',
+        version: '0.1.4',
       ),
       capabilities: AgentCapabilities(
         loadSession: true,
@@ -210,7 +211,7 @@ final class CodexAgent {
         'clientInfo': <String, Object?>{
           'name': 'dart_acp_codex',
           'title': 'Dart ACP Codex',
-          'version': '0.1.2',
+          'version': '0.1.4',
         },
         'capabilities': <String, Object?>{
           'experimentalApi': true,
@@ -588,6 +589,7 @@ final class CodexAgent {
         cwd: cwd,
         additionalDirectories: additionalDirectories,
         fallbackId: requestedId,
+        autoNameOnPrompt: true,
       );
       await _refreshGoal(state);
       return state;
@@ -619,6 +621,7 @@ final class CodexAgent {
         cwd: cwd,
         additionalDirectories: additionalDirectories,
         fallbackId: requestedId,
+        autoNameOnPrompt: false,
       );
       await _refreshGoal(state);
       return (state, response);
@@ -642,6 +645,7 @@ final class CodexAgent {
     required CodexJsonObject response,
     required String cwd,
     required Iterable<String> additionalDirectories,
+    required bool autoNameOnPrompt,
     SessionId? fallbackId,
   }) {
     final thread = response.requireObject('thread');
@@ -667,6 +671,7 @@ final class CodexAgent {
           ) ??
           model?.defaultReasoningEffort ??
           CodexReasoningEffort.medium,
+      autoNameOnPrompt: autoNameOnPrompt,
       contextWindow: model?.contextWindow,
     );
     _sessions.add(state);
@@ -922,6 +927,7 @@ final class CodexAgent {
       }
       return PromptResponse(stopReason: StopReason.endTurn);
     }
+    await _maybeSetInitialThreadName(state, request.prompt);
     if (state.activeTurn case final activeTurn?) {
       await _backend.request(
         'turn/steer',
@@ -994,6 +1000,37 @@ final class CodexAgent {
         ..activeTurn = null
         ..turnCompletion = null;
       rethrow;
+    }
+  }
+
+  Future<void> _maybeSetInitialThreadName(
+    CodexSessionState state,
+    Iterable<ContentBlock> prompt,
+  ) async {
+    if (!state.autoNameOnPrompt) {
+      return;
+    }
+    final title = CodexThreadTitle.fromPrompt(prompt);
+    if (title == null) {
+      return;
+    }
+    state.autoNameOnPrompt = false;
+    try {
+      await _backend.request(
+        'thread/name/set',
+        params: CodexJsonObject.from(<String, Object?>{
+          'threadId': state.sessionId.value,
+          'name': title,
+        }),
+      );
+    } on Object {
+      options.onDiagnostic?.call(
+        const CodexDiagnostic(
+          level: CodexDiagnosticLevel.warning,
+          category: CodexDiagnosticCategory.protocol,
+          message: 'The Codex app server could not name the new thread.',
+        ),
+      );
     }
   }
 
