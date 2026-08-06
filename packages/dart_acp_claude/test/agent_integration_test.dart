@@ -708,4 +708,74 @@ void main() {
     expect(captured!.resume, 'existing-session');
     expect(captured!.sessionId, isNull);
   });
+
+  test('a prompt sent mid-turn joins the turn in flight', () async {
+    // A user typing while the agent works expects to be heard now, not after
+    // the current turn ends. Both prompts must reach the CLI before either
+    // settles, and the one result must settle both requests.
+    late FakeClaudeTransport transport;
+    final agent = ClaudeAcpAgent(
+      fileSystem: _FakeFileSystem(),
+      clientFactory: (options) async {
+        transport = FakeClaudeTransport();
+        transport.onWrite = transport.autoRespond;
+        return claude.ClaudeAgentClient(options: options, transport: transport);
+      },
+    );
+    addTearDown(agent.dispose);
+    final client = AcpClientApp.v1(
+      implementation: Implementation(name: 'test', version: '1'),
+      capabilities: ClientCapabilities.fromJson(<String, Object?>{
+        'fs': <String, Object?>{'readTextFile': false, 'writeTextFile': false},
+        'terminal': false,
+      }),
+    );
+    final pair = await client.connectWith(agent.app);
+    addTearDown(pair.close);
+    final created = await pair.client.agent.createSession(
+      NewSessionRequest(cwd: '/workspace', mcpServers: const <McpServer>[]),
+    );
+
+    bool carries(Map<String, Object?> frame, String text) =>
+        frame.toString().contains(text) && frame['type'] == 'user';
+
+    final first = pair.client.agent.sendPrompt(
+      PromptRequest(
+        sessionId: created.sessionId,
+        prompt: <ContentBlock>[ContentBlockText(TextContent(text: 'first'))],
+      ),
+    );
+    await transport.nextWriteWhere((frame) => carries(frame, 'first'));
+
+    final second = pair.client.agent.sendPrompt(
+      PromptRequest(
+        sessionId: created.sessionId,
+        prompt: <ContentBlock>[ContentBlockText(TextContent(text: 'second'))],
+      ),
+    );
+    // Queued behind the running turn this would never arrive: nothing has
+    // settled the first one yet.
+    await transport.nextWriteWhere((frame) => carries(frame, 'second'));
+
+    transport.emit(<String, Object?>{
+      'type': 'result',
+      'subtype': 'success',
+      'duration_ms': 10,
+      'duration_api_ms': 8,
+      'is_error': false,
+      'num_turns': 1,
+      'session_id': created.sessionId.value,
+      'result': 'done',
+      'total_cost_usd': 0.01,
+      'usage': <String, Object?>{
+        'input_tokens': 8,
+        'output_tokens': 2,
+        'cache_read_input_tokens': 0,
+        'cache_creation_input_tokens': 0,
+      },
+    });
+
+    expect((await first).stopReason, StopReason.endTurn);
+    expect((await second).stopReason, StopReason.endTurn);
+  });
 }

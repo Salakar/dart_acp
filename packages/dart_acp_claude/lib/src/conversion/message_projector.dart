@@ -127,7 +127,10 @@ final class ClaudeMessageProjector {
           if (message.parentToolUseId != null && !supportsSubagentTranscript) {
             break;
           }
-          final suffix = _unstreamed(text, state?._text[index]?.value);
+          final suffix = _unstreamed(
+            text,
+            _streamedValue(state, index, thinking: false, complete: text),
+          );
           if (suffix.isNotEmpty) {
             state?._emittedAgentText = true;
             updates.add(_chunk('agent_message_chunk', suffix, message));
@@ -136,7 +139,10 @@ final class ClaudeMessageProjector {
           if (message.parentToolUseId != null && !supportsSubagentTranscript) {
             break;
           }
-          final suffix = _unstreamed(thinking, state?._text[index]?.value);
+          final suffix = _unstreamed(
+            thinking,
+            _streamedValue(state, index, thinking: true, complete: thinking),
+          );
           if (suffix.isNotEmpty) {
             updates.add(_chunk('agent_thought_chunk', suffix, message));
           }
@@ -165,6 +171,34 @@ final class ClaudeMessageProjector {
               ),
             );
             state?.surfaceTool(block.id);
+          } else if (surfaced &&
+              !_planOnlyTools.contains(block.name) &&
+              !(state?._tools[index]?.stopped ?? false)) {
+            // Streaming surfaced this call from `content_block_start`, where
+            // `input` is still empty, and the completed input exists only here.
+            // The CLI sends this assistant message BEFORE the matching
+            // `content_block_stop`, and this method clears the streamed state
+            // on its way out — so the stop handler that would have carried the
+            // input never sees the tool, and a client is left with a tool call
+            // it cannot describe. Send the input as an update instead.
+            updates.add(
+              _withAssistantMetadata(
+                SessionUpdate.fromJson(<String, Object?>{
+                  ...tools
+                      .start(
+                        block,
+                        cwd: cwd,
+                        supportsTerminalOutput: supportsTerminalOutput,
+                      )
+                      .toJson(),
+                  'sessionUpdate': 'tool_call_update',
+                  'toolCallId': block.id,
+                  'status': 'in_progress',
+                  'rawInput': block.input,
+                }),
+                message,
+              ),
+            );
           }
         case UnknownContentBlock(:final raw):
           if (message.parentToolUseId != null && !supportsSubagentTranscript) {
@@ -469,6 +503,22 @@ final class ClaudeMessageProjector {
         'sessionUpdate': 'usage_update',
         'used': used,
         'size': state._contextWindow,
+        // ACP's `used`/`size` describe the context window, but a client that
+        // shows live "tokens generated" (Claude Code's own footer does) needs
+        // the breakdown, and output tokens can't be derived from a total.
+        // These count the message in flight and reset at each `message_start`,
+        // so `messageId` rides along: without it a client can only spot a new
+        // message from its text chunks, and a tool-only message would look
+        // like the previous one's count dropping.
+        '_meta': <String, Object?>{
+          'claude': <String, Object?>{
+            'messageId': ?state._messageId,
+            'inputTokens': state._inputTokens,
+            'outputTokens': state._outputTokens,
+            'cacheReadTokens': state._cacheReadTokens,
+            'cacheWriteTokens': state._cacheWriteTokens,
+          },
+        },
       }),
     ];
   }
@@ -767,6 +817,31 @@ final class ClaudeMessageProjector {
         }),
       ];
     }
+    // A background shell finished. ACP has no notion of a task that outlives
+    // the tool call that spawned it, so this rides on a metadata-only update
+    // for that call: a client showing "running in background" has no other
+    // way to learn the task ended, and most of these notifications carry
+    // `skipTranscript`, so replaying the thread will not reveal them either.
+    if (message is TaskNotificationMessage) {
+      final toolUseId = message.toolUseId;
+      if (toolUseId == null || toolUseId.isEmpty) {
+        return const <SessionUpdate>[];
+      }
+      return <SessionUpdate>[
+        SessionUpdate.fromJson(<String, Object?>{
+          'sessionUpdate': 'tool_call_update',
+          'toolCallId': toolUseId,
+          '_meta': <String, Object?>{
+            'claude': <String, Object?>{
+              'subtype': message.subtype,
+              'taskId': message.taskId,
+              'status': message.status.name,
+              'summary': message.summary,
+            },
+          },
+        }),
+      ];
+    }
     if (message is PermissionDeniedMessage) {
       return <SessionUpdate>[
         SessionUpdate.fromJson(<String, Object?>{
@@ -915,6 +990,40 @@ final class ClaudeMessageProjector {
     if (id != null && id.isNotEmpty) return id;
     final uuid = message.uuid;
     return uuid == null || uuid.isEmpty ? null : uuid;
+  }
+
+  /// The already-streamed prefix of a completed text/thinking block.
+  ///
+  /// The CLI sends one `assistant` event per content block, each carrying a
+  /// single-element `content` list, so a block's position *there* is always 0
+  /// — it stops matching the stream's `content_block_index` as soon as a
+  /// thinking or tool_use block precedes the text in the same message. Keyed
+  /// by that stale index, the lookup missed and the whole block was re-emitted
+  /// on top of the deltas the client had already rendered (every paragraph
+  /// after a thinking block appeared twice). Fall back to the longest streamed
+  /// value of the same kind that this block starts with.
+  String? _streamedValue(
+    ClaudeMessageProjectionState? state,
+    int index, {
+    required bool thinking,
+    required String complete,
+  }) {
+    if (state == null) return null;
+    final byIndex = state._text[index];
+    if (byIndex != null &&
+        byIndex.thinking == thinking &&
+        complete.startsWith(byIndex.value)) {
+      return byIndex.value;
+    }
+    String? best;
+    for (final streamed in state._text.values) {
+      if (streamed.thinking != thinking || streamed.value.isEmpty) continue;
+      if (!complete.startsWith(streamed.value)) continue;
+      if (best == null || streamed.value.length > best.length) {
+        best = streamed.value;
+      }
+    }
+    return best;
   }
 
   String _unstreamed(String complete, String? streamed) {

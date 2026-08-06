@@ -109,6 +109,11 @@ final class ClaudeAcpSession {
   /// Number of active or queued prompt operations.
   int get pendingCount => _pending;
 
+  /// The outcome of the turn already running, or null when the session is
+  /// idle. A prompt that arrives mid-turn joins this instead of opening a
+  /// second turn, so it reaches the model while it is still working.
+  Future<ClaudeAcpTurnOutcome>? get activeTurn => _turn?.future;
+
   /// Serializes [operation] behind earlier prompts.
   Future<T> enqueue<T>(Future<T> Function() operation) {
     if (_closed) {
