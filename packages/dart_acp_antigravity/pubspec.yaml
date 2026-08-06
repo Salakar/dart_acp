@@ -1,0 +1,24 @@
+name: dart_acp_antigravity
+description: >-
+  A Dart ACP adapter for the Antigravity CLI, exposing agy print-mode
+  conversations as an Agent Client Protocol agent.
+version: 0.1.0
+repository: https://github.com/Salakar/dart_acp
+issue_tracker: https://github.com/Salakar/dart_acp/issues
+homepage: https://github.com/Salakar/dart_acp/tree/main/packages/dart_acp_antigravity
+topics:
+  - acp
+  - ai
+  - agents
+  - antigravity
+  - json-rpc
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  dart_acp_sdk: ^0.1.0
+
+dev_dependencies:
+  lints: ^6.1.0
+  test: ^1.30.0
