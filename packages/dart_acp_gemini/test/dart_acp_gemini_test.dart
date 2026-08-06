@@ -136,6 +136,71 @@ void main() {
   );
 
   test(
+    'passes the selected model to the CLI as --model',
+    () async {
+      final Directory temporary = Directory.systemTemp.createTempSync(
+        'dart-acp-gemini-',
+      );
+      addTearDown(() => temporary.deleteSync(recursive: true));
+      final File argumentsFile = File('${temporary.path}/arguments.txt');
+      final File executable = File('${temporary.path}/gemini')
+        ..writeAsStringSync(
+          '#!/bin/sh\n'
+          'if [ "\$1" = "--help" ]; then\n'
+          '  printf "%s\\n" "  --experimental-acp  Starts ACP mode"\n'
+          '  exit 0\n'
+          'fi\n'
+          'printf "%s\\n" "\$@" > "\$ARGUMENTS_FILE"\n'
+          'IFS= read -r request\n'
+          "printf '%s\\n' "
+          '\'{"jsonrpc":"2.0","id":0,"result":{"protocolVersion":1,'
+          '"agentCapabilities":{"loadSession":false,'
+          '"promptCapabilities":{"image":false,"audio":false,'
+          '"embeddedContext":false},"mcpCapabilities":{"http":false,'
+          '"sse":false}},"authMethods":[]}}\'\n'
+          'while IFS= read -r request; do :; done\n',
+        );
+      final ProcessResult chmod = Process.runSync('chmod', <String>[
+        '+x',
+        executable.path,
+      ]);
+      expect(chmod.exitCode, 0);
+
+      final GeminiAcpClient client = await GeminiAcpClient.start(
+        options: GeminiAcpClientOptions(
+          executable: executable.path,
+          model: 'gemini-2.5-pro',
+          environment: <String, String>{'ARGUMENTS_FILE': argumentsFile.path},
+          initializationTimeout: const Duration(seconds: 5),
+        ),
+      );
+      expect(client.arguments, const <String>[
+        '--experimental-acp',
+        '--model',
+        'gemini-2.5-pro',
+      ]);
+      await client.close();
+      // The flag has to reach the process, not just the recorded vector.
+      expect(argumentsFile.readAsLinesSync(), const <String>[
+        '--experimental-acp',
+        '--model',
+        'gemini-2.5-pro',
+      ]);
+    },
+    skip: Platform.isWindows
+        ? 'The fixture is a POSIX executable; Windows discovery is tested '
+              'separately.'
+        : false,
+  );
+
+  test('rejects a blank model rather than launching without one', () {
+    expect(
+      () => GeminiAcpClientOptions(model: '   '),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
+  test(
     'reports malformed handshakes and cleans up the process',
     () async {
       final Directory temporary = Directory.systemTemp.createTempSync(

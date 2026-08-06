@@ -19,6 +19,7 @@ final class GeminiAcpClientOptions {
   GeminiAcpClientOptions({
     this.executable,
     this.workingDirectory,
+    this.model,
     Map<String, String>? environment,
     this.includeParentEnvironment = true,
     this.flagDetectionTimeout = const Duration(seconds: 5),
@@ -40,6 +41,9 @@ final class GeminiAcpClientOptions {
         'workingDirectory',
         'must not be empty',
       );
+    }
+    if (model case final String value when value.trim().isEmpty) {
+      throw ArgumentError.value(model, 'model', 'must not be empty');
     }
     if (flagDetectionTimeout <= Duration.zero) {
       throw ArgumentError.value(
@@ -78,6 +82,14 @@ final class GeminiAcpClientOptions {
 
   /// Working directory inherited by Gemini CLI and used as its project.
   final String? workingDirectory;
+
+  /// Model the session runs on, passed as the CLI's `--model`.
+  ///
+  /// The Gemini CLI advertises no ACP session config options, so
+  /// `session/set_config_option` cannot reach the model — launching with the
+  /// flag is the only way a client gets the model it selected. Omit to let the
+  /// CLI use its own configured default.
+  final String? model;
 
   /// Environment entries supplied to the child process.
   final Map<String, String>? environment;
@@ -171,7 +183,10 @@ final class GeminiAcpClient {
         resolved.executable ??
         findGeminiExecutable(environment: finderEnvironment);
     final String acpFlag = await _detectAcpFlag(executable, resolved);
-    final List<String> arguments = List<String>.unmodifiable(<String>[acpFlag]);
+    final List<String> arguments = List<String>.unmodifiable(<String>[
+      acpFlag,
+      if (resolved.model case final String model) ...<String>['--model', model],
+    ]);
     final Process process;
     try {
       process = await Process.start(
