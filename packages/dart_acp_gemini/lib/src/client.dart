@@ -20,6 +20,8 @@ final class GeminiAcpClientOptions {
     this.executable,
     this.workingDirectory,
     this.model,
+    this.sessionFile,
+    this.sessionId,
     Map<String, String>? environment,
     this.includeParentEnvironment = true,
     this.flagDetectionTimeout = const Duration(seconds: 5),
@@ -44,6 +46,22 @@ final class GeminiAcpClientOptions {
     }
     if (model case final String value when value.trim().isEmpty) {
       throw ArgumentError.value(model, 'model', 'must not be empty');
+    }
+    if (sessionFile case final String value when value.trim().isEmpty) {
+      throw ArgumentError.value(
+        sessionFile,
+        'sessionFile',
+        'must not be empty',
+      );
+    }
+    if (sessionId case final String value when value.trim().isEmpty) {
+      throw ArgumentError.value(sessionId, 'sessionId', 'must not be empty');
+    }
+    if (sessionFile != null && sessionId != null) {
+      throw ArgumentError(
+        'sessionFile and sessionId are mutually exclusive: one continues an '
+        'existing session, the other names a new one.',
+      );
     }
     if (flagDetectionTimeout <= Duration.zero) {
       throw ArgumentError.value(
@@ -82,6 +100,19 @@ final class GeminiAcpClientOptions {
 
   /// Working directory inherited by Gemini CLI and used as its project.
   final String? workingDirectory;
+
+  /// A session recorded by the CLI to continue, passed as `--session-file`.
+  ///
+  /// The Gemini CLI's ACP agent does not implement `session/resume`, so a
+  /// client cannot resume over the protocol; loading the session at launch is
+  /// how a conversation continues with its history intact. The path is the
+  /// CLI's own session file (`~/.gemini/tmp/<project>/chats/session-*`).
+  final String? sessionFile;
+
+  /// The id a NEW session is created under, passed as `--session-id`, so a
+  /// client can address the conversation by an id it chose. Mutually exclusive
+  /// with [sessionFile].
+  final String? sessionId;
 
   /// Model the session runs on, passed as the CLI's `--model`.
   ///
@@ -186,6 +217,14 @@ final class GeminiAcpClient {
     final List<String> arguments = List<String>.unmodifiable(<String>[
       acpFlag,
       if (resolved.model case final String model) ...<String>['--model', model],
+      if (resolved.sessionFile case final String file) ...<String>[
+        '--session-file',
+        file,
+      ],
+      if (resolved.sessionId case final String id) ...<String>[
+        '--session-id',
+        id,
+      ],
     ]);
     final Process process;
     try {
