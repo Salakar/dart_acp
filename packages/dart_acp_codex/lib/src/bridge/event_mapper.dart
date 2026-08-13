@@ -303,6 +303,15 @@ final class CodexEventMapper {
       'sessionUpdate': 'usage_update',
       'used': used.clamp(0, size),
       'size': size,
+      // `used`/`size` describe the context window, which is all ACP models.
+      // Codex also reports what the turn actually generated (output tokens,
+      // reasoning tokens, cache hits), and a client that shows "N tokens" for
+      // a turn has no way to get at it once this is collapsed to a total.
+      // Pass the whole thing through rather than picking fields, so a shape
+      // Codex grows later arrives without another release here.
+      '_meta': <String, Object?>{
+        'codex': <String, Object?>{'tokenUsage': usage.toJson()},
+      },
     });
   }
 
