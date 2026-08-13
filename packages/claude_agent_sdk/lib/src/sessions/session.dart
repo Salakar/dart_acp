@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import '../errors.dart';
 import '../json.dart';
 import '../uuid.dart';
+import 'config_directory.dart';
 import 'session_store.dart';
 
 /// Metadata for a persisted Claude Code session.
@@ -646,13 +647,12 @@ Future<void> importSessionToStore(
   }
 }
 
-Directory _projectsDirectory(String? config) {
-  final base =
-      config ??
-      Platform.environment['CLAUDE_CONFIG_DIR'] ??
-      p.join(Platform.environment['HOME'] ?? Directory.current.path, '.claude');
-  return Directory(p.join(base, 'projects'));
-}
+Directory _projectsDirectory(String? config) => Directory(
+  p.join(
+    claudeConfigDirectory(Platform.environment, override: config),
+    'projects',
+  ),
+);
 
 String _canonicalDirectory(String value) {
   final absolute = Directory(value).absolute;

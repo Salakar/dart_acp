@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import '../errors.dart';
 import '../options.dart';
 import '../uuid.dart';
+import 'config_directory.dart';
 import 'session.dart';
 import 'session_store.dart';
 
@@ -163,14 +164,11 @@ Future<void> _copyAuthentication(
   ClaudeAgentOptions options,
   Directory destination,
 ) async {
+  final environment = {...Platform.environment, ...options.environment};
   final customConfig =
       options.environment['CLAUDE_CONFIG_DIR'] ??
       Platform.environment['CLAUDE_CONFIG_DIR'];
-  final home =
-      Platform.environment['HOME'] ??
-      Platform.environment['USERPROFILE'] ??
-      Directory.current.path;
-  final sourceConfig = customConfig ?? p.join(home, '.claude');
+  final sourceConfig = claudeConfigDirectory(environment);
   String? credentials;
   final credentialsFile = File(p.join(sourceConfig, '.credentials.json'));
   if (credentialsFile.existsSync()) {
@@ -191,7 +189,7 @@ Future<void> _copyAuthentication(
   }
   final claudeJsonSource = File(
     customConfig == null
-        ? p.join(home, '.claude.json')
+        ? p.join(userProfileDirectory(environment), '.claude.json')
         : p.join(customConfig, '.claude.json'),
   );
   if (claudeJsonSource.existsSync()) {
