@@ -73,7 +73,7 @@ final class CodexElicitationBridge {
       'sessionId': session.sessionId.value,
       'toolCallId': ?correlatedId,
       'message': params.optionalString('message') ?? 'Input requested',
-      '_meta': rawMeta,
+      '_meta': _metaWithServerName(rawMeta, serverName),
       if (mode == 'form')
         'requestedSchema': _normalizeSchema(
           requestedSchema?.toJson() ?? const <String, Object?>{},
@@ -333,6 +333,31 @@ final class CodexElicitationBridge {
       'content': action == 'accept' ? json['content'] : null,
       '_meta': json['_meta'],
     };
+  }
+
+  /// [rawMeta] with the MCP server that asked recorded under the adapter's own
+  /// `codex` namespace.
+  ///
+  /// The elicitation itself carries `serverName`, but the ACP request keeps
+  /// only the mode's own fields, `message` and `_meta` — so a client had no
+  /// way to tell which server was asking, and could not, say, pre-approve a
+  /// server it installed itself while still prompting for every other one.
+  /// The server's own `_meta` is preserved; only the `codex` key is ours.
+  Map<String, Object?> _metaWithServerName(Object? rawMeta, String serverName) {
+    final meta = rawMeta is Map<Object?, Object?>
+        ? <String, Object?>{
+            for (final entry in rawMeta.entries)
+              if (entry.key is String) entry.key! as String: entry.value,
+          }
+        : <String, Object?>{};
+    final existing = meta['codex'];
+    meta['codex'] = <String, Object?>{
+      if (existing is Map<Object?, Object?>)
+        for (final entry in existing.entries)
+          if (entry.key is String) entry.key! as String: entry.value,
+      'serverName': serverName,
+    };
+    return meta;
   }
 
   Map<String, Object?> _normalizeSchema(Map<String, Object?> value) {
