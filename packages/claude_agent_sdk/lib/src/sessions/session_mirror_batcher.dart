@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../json.dart';
+import 'config_directory.dart';
 import 'session_store.dart';
 
 /// Converts an absolute mirrored transcript path to a portable store key.
@@ -156,10 +157,12 @@ final class SessionMirrorBatcher {
 }
 
 /// Resolves the projects directory used for transcript mirror paths.
-String projectsDirectoryForEnvironment(Map<String, String> environment) {
-  final config =
-      environment['CLAUDE_CONFIG_DIR'] ??
-      Platform.environment['CLAUDE_CONFIG_DIR'] ??
-      p.join(Platform.environment['HOME'] ?? Directory.current.path, '.claude');
-  return p.join(config, 'projects');
-}
+///
+/// [environment] is the agent's own environment, so anything it sets for the
+/// CLI (a configuration directory, a user profile) decides where the mirror
+/// lands; the process environment answers whatever it leaves unset.
+String projectsDirectoryForEnvironment(Map<String, String> environment) =>
+    p.join(
+      claudeConfigDirectory({...Platform.environment, ...environment}),
+      'projects',
+    );
