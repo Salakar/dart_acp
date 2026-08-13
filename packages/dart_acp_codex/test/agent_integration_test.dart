@@ -713,6 +713,15 @@ void main() {
     );
     expect(form.requireString('action'), 'accept');
     expect(harness.elicitations.single.toJson().toString(), contains('oneOf'));
+    // The asking server reaches the client: the ACP request keeps only the
+    // mode's fields, `message` and `_meta`, so without this a client cannot
+    // tell one MCP server's question from another's.
+    expect(
+      ((harness.elicitations.single.toJson()['_meta']
+              as Map<Object?, Object?>)['codex']
+          as Map<Object?, Object?>)['serverName'],
+      'demo',
+    );
 
     final userInput = await harness.backend.ask(
       CodexUserInputRequest(
