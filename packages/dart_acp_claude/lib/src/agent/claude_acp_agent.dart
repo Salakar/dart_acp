@@ -73,6 +73,16 @@ final class ClaudeAcpAgent {
            )) {
     final baseApp = AcpAgentApp(
       name: 'dart_acp_claude',
+      // The agent runs in the client's own process, so there is no trust
+      // boundary to hide behind: a handler exception surfaced as a bare
+      // "Internal error" is a failed turn nobody can diagnose. Details ride
+      // in the error's `data` (stable v1 keeps rejecting batches).
+      options: const AcpApplicationOptions(
+        jsonRpcOptions: JsonRpcConnectionOptions(
+          allowBatches: false,
+          exposeInternalErrorDetails: true,
+        ),
+      ),
       initialization:
           AcpAgentInitialization<
             unstable.InitializeRequest,
